@@ -4,18 +4,22 @@ using UnityEngine;
 public class RecordSkeleton : MonoBehaviour
 {
     [SerializeField]
-    private OVRHand _ovrHand;
+    private OVRHand hand;
+
     [SerializeField]
-    private OVRSkeleton _ovrSkeleton;
+    private OVRSkeleton handSkeleton;
+
+    [SerializeField]
+    private GameObject bonePrefab;
+
+    private bool bonesAdded = false;
 
 
 
     private void Awake()
     {
-        if(_ovrHand == null) _ovrHand = GetComponent<OVRHand>();
-        if(_ovrSkeleton == null) _ovrSkeleton = GetComponent<OVRSkeleton>();
-        
-        
+        if (!hand) hand = GetComponent<OVRHand>();
+        if (!handSkeleton) handSkeleton = GetComponent<OVRSkeleton>();   
     }
 
 
@@ -28,77 +32,44 @@ public class RecordSkeleton : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Debug.Log("updating");
-        if(_ovrHand.IsTracked){
-            Debug.Log("tracking");
+        if(hand.IsTracked)
+        {
             DisplayBoneInfo();
+            if(!bonesAdded) CreateBones();
         }
-
-
-
-
-
-        // if (_ovrSkeleton.IsInitialized)
-        // {
-        //     Debug.Log("is initialized");
-        //     for (int i = 0; i < _ovrSkeleton.Bones.Count; i++)
-        //     {
-            
-        //             //Debug.Log(_ovrSkeleton.Bones[i].Transform);
-        //     }
-
-        //     if (_renderPhysicsCapsules && _ovrSkeleton.Capsules != null)
-        //     {
-        //         for (int i = 0; i < _ovrSkeleton.Capsules.Count; i++)
-        //         {
-        //             var capsuleVis = new CapsuleVisualization(
-        //                 _skeletonGO,
-        //                 _capsuleMaterial,
-        //                 _systemGestureMaterial,
-        //                 _scale,
-        //                 _ovrSkeleton.Capsules[i]);
-
-        //             _capsuleVisualizations.Add(capsuleVis);
-        //         }
-        //     }
-
-        // }
         
     }
 
     private void DisplayBoneInfo()
     {
         string message = "";
-        message += _ovrSkeleton.GetCurrentNumBones();
-        message += " Num of Bones\n";
-        int i = 0;
-        foreach (var bone in _ovrSkeleton.Bones){
-            message += _ovrSkeleton.GetSkeletonType
+        message += handSkeleton.GetSkeletonType();
+        message += "  ";
+        message += handSkeleton.GetCurrentNumBones();
+        message += "  ";
+        message += handSkeleton.GetCurrentStartBoneId();
+        message += "\n";
+        
+        // int i = 0;
+        foreach (var bone in handSkeleton.Bones){
             message += bone.Id;
+            message += ": ";
+            message += bone.Transform.position;
             message += "\n";
-            
-            // i ++;
-            // if (i > 7){
-            //     message += _ovrSkeleton.GetSkeletonType();
-            //     message += " = Skeleton Type\n";
-            //     message += bone.Id;
-            //     message += " = Bone ID\n";
-            //     message += bone.Transform.position;
-            //     message += " = Transform position\n";
-
-            //     if( i > 9) break
-            // }
         }
-        message += "\n" + i + "\n";
         Debug.Log(message);
-        // foreach (var bone in _ovrSkeleton.Bones)
-        // {
-        //     Logger.Instance.LogInfo($"{_ovrSkeleton.GetSkeletonType()}: boneId -> {bone.Id} pos -> {bone.Transform.position}");
-        // }
-
-        // Logger.Instance.LogInfo($"{_ovrSkeleton.GetSkeletonType()} num of bones: {_ovrSkeleton.GetCurrentNumBones()}");
-        // Logger.Instance.LogInfo($"{_ovrSkeleton.GetSkeletonType()} num of skinnable bones: {_ovrSkeleton.GetCurrentNumSkinnableBones()}");
-        // Logger.Instance.LogInfo($"{_ovrSkeleton.GetSkeletonType()} start bone id: {_ovrSkeleton.GetCurrentStartBoneId()}");
-        // Logger.Instance.LogInfo($"{_ovrSkeleton.GetSkeletonType()} end bone id: {_ovrSkeleton.GetCurrentEndBoneId()}");
     }
+
+    private void CreateBones()
+    {
+        foreach (var bone in handSkeleton.Bones)
+        {
+            Instantiate(bonePrefab, bone.Transform)
+                .GetComponent<BoneInfo>()
+                .AddBone(bone);
+        }
+
+        bonesAdded = true;
+    }
+
 }
