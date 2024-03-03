@@ -7,10 +7,16 @@ using UnityEngine.UI;
 /// <summary>
 /// Manages UI of anchor sample.
 /// </summary>
-[RequireComponent(typeof(SpatialAnchorLoader))]
+// [RequireComponent(typeof(SpatialAnchorLoader))]
 
 public class SpatialAnchorsManager : MonoBehaviour
 {
+
+    public enum AnchorMode {
+        Record,
+        Replay
+    }
+    public AnchorMode _mode;
 
     //Anchor UI manager singleton instance
     public static SpatialAnchorsManager Instance;
@@ -21,8 +27,17 @@ public class SpatialAnchorsManager : MonoBehaviour
 
     // the one to create
     [SerializeField]
-    private Anchor _anchorPrefab;
+    private GameObject _anchorPrefab;
     // public Anchor AnchorPrefab => _anchorPrefab;
+
+
+    // the one to create
+    [SerializeField]
+    private GameObject _replayAnchor;
+
+    public Vector3 AnchorPosition;
+
+    public bool HandRecording = false;
 
 
 
@@ -52,29 +67,44 @@ public class SpatialAnchorsManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
+        if(_mode == AnchorMode.Record){
+            if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
             // Debug.Log("button down");
-            PlaceAnchor();
+                PlaceAnchor();
+            }
         }
 
-        if (OVRInput.GetUp(OVRInput.Button.One)){
-            OnLoadAnchorsButtonPressed();
+        if(_mode == AnchorMode.Replay){
+            if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
+                _replayAnchor.transform.position = _anchorPlacementTransform.position;
+                // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
+            }
+
         }
+        
+
+        
+
+        // if (OVRInput.GetUp(OVRInput.Button.One)){
+        //     OnLoadAnchorsButtonPressed();
+        // }
         
     }
 
     private void PlaceAnchor()
     {
+        AnchorPosition = _anchorPlacementTransform.position;
         // check once!!!
         Instantiate(_anchorPrefab, _anchorPlacementTransform.position, _anchorPlacementTransform.rotation);
+        HandRecording = true;
     }
 
 
-    /// <summary>
-    /// Load anchors button pressed UI callback. Referenced by the Load Anchors button in the menu.
-    /// </summary>
-    public void OnLoadAnchorsButtonPressed()
-    {
-        GetComponent<SpatialAnchorLoader>().LoadAnchorsByUuid();
-    }
+    // /// <summary>
+    // /// Load anchors button pressed UI callback. Referenced by the Load Anchors button in the menu.
+    // /// </summary>
+    // public void OnLoadAnchorsButtonPressed()
+    // {
+    //     GetComponent<SpatialAnchorLoader>().LoadAnchorsByUuid();
+    // }
 }

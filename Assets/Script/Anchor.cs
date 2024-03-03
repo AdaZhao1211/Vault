@@ -42,7 +42,7 @@ public class Anchor : MonoBehaviour
         if(_spatialAnchor.Created){
             if(timeRemaining > 0){
             timeRemaining -= Time.deltaTime;
-            if(timeForFlash - timeRemaining > 0.1){
+            if(timeForFlash - timeRemaining > flashInterval){
                 timeForFlash = timeRemaining;
                 FlashSaveIcon();
                 }
