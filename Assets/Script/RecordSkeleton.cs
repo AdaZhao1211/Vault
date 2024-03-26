@@ -17,7 +17,18 @@ public class RecordSkeleton : MonoBehaviour
     private bool bonesAdded = false;
 
     [SerializeField]
-    private GameObject _recordingMode;
+    private SpatialAnchorsManager RecordingMode;
+
+
+    private GameObject _anchor;
+    private bool _findAnchor = false;
+
+    private Transform constructedAnchorTransform;
+
+
+    public Vector3 IndexTipPos;
+
+    public Vector3[] HandSkeletonPos;
 
 
     private void Awake()
@@ -29,6 +40,7 @@ public class RecordSkeleton : MonoBehaviour
 
     private void Start()
     {
+        HandSkeletonPos = new Vector3[24];
 
     }
 
@@ -36,7 +48,20 @@ public class RecordSkeleton : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(_recordingMode.GetComponent<SpatialAnchorsManager>().HandRecording){
+        // is recording
+        if(RecordingMode.Mode == 1){
+            // first save the anchor
+            if (!_findAnchor){
+                var theAcnhorMatrix = RecordingMode.AnchorMatrix;
+                Vector3 anchorP = new Vector3(theAcnhorMatrix[0,3], theAcnhorMatrix[1,3], theAcnhorMatrix[2,3]);
+                Quaternion anchorR = ExtractRotation(theAcnhorMatrix);
+                constructedAnchorTransform = new GameObject().transform;
+                // Transform constructedAnchorTransform;
+                constructedAnchorTransform.position = anchorP;
+                constructedAnchorTransform.rotation = anchorR;
+                constructedAnchorTransform.localScale = new Vector3(1, 1, 1);
+                _findAnchor = true;
+            }
             if(hand.IsTracked)
             {
                 DisplayBoneInfo();
@@ -44,16 +69,9 @@ public class RecordSkeleton : MonoBehaviour
             }
 
         }
-        
 
-        if (OVRInput.GetUp(OVRInput.Button.One)){
-            Debug.Log("end");
-            OscMessage _oscmessage;
-            _oscmessage = new OscMessage();
-            _oscmessage.address = "/end";
-            osc.Send(_oscmessage);
-            _recordingMode.GetComponent<SpatialAnchorsManager>().HandRecording = false;
-        }
+        // on end recording pressed
+        
         
     }
 
@@ -73,32 +91,72 @@ public class RecordSkeleton : MonoBehaviour
         _oscmessage.address = "/location";
         _oscmessage.values.Add(System.DateTime.Now.ToString());
 
-        // int i = 0;
+
+        // var theAcnhorMatrix = _recordingMode.GetComponent<SpatialAnchorsManager>().AnchorMatrix;
+        // Vector3 anchorP = new Vector3(theAcnhorMatrix[0,3], theAcnhorMatrix[1,3], theAcnhorMatrix[2,3]);
+        // Quaternion anchorR = ExtractRotation(theAcnhorMatrix);
+        // var constructedAnchorTransform = new GameObject().transform;
+        // // Transform constructedAnchorTransform;
+        // constructedAnchorTransform.position = anchorP;
+        // constructedAnchorTransform.rotation = anchorR;
+        // constructedAnchorTransform.localScale = new Vector3(1, 1, 1);
+
+
+        int i = 0;
         foreach (var bone in handSkeleton.Bones){
             
-            Vector3 relativePosition = bone.Transform.position - _recordingMode.GetComponent<SpatialAnchorsManager>().AnchorPosition;
+            if(i == 20){
+                IndexTipPos = bone.Transform.position;
+            }
+            // Vector3 relativePosition = bone.Transform.position - _recordingMode.GetComponent<SpatialAnchorsManager>().AnchorPosition;
+            Vector3 relativePosition = constructedAnchorTransform.InverseTransformPoint(bone.Transform.position);
+            HandSkeletonPos[i] = relativePosition;
+
+            // Vector3 relativePosition = bone.Transform.position;
             // log bone position to file
             // _oscmessage.values.Add(relativePosition.ToString());
             _oscmessage.values.Add(relativePosition.ToString());
-            message += relativePosition.ToString();
-            message += "\n";
-
+            i ++;
             
         }
+        message += i.ToString();
+        message += "\n";
+        message += IndexTipPos.ToString();
+        message += "\n";
+        message += constructedAnchorTransform.position.ToString();
         osc.Send(_oscmessage);
-        Debug.Log(message);
+        // Debug.Log(message);
     }
 
     private void CreateBones()
     {
+        int i = 0;
         foreach (var bone in handSkeleton.Bones)
         {
             Instantiate(bonePrefab, bone.Transform)
                 .GetComponent<BoneInfo>()
-                .AddBone(bone);
+                .AddBone(bone, i);
+
+            i++;
         }
 
         bonesAdded = true;
+    }
+
+
+    private Quaternion ExtractRotation(Matrix4x4 matrix)
+    {
+        Vector3 forward;
+        forward.x = matrix.m02;
+        forward.y = matrix.m12;
+        forward.z = matrix.m22;
+ 
+        Vector3 upwards;
+        upwards.x = matrix.m01;
+        upwards.y = matrix.m11;
+        upwards.z = matrix.m21;
+ 
+        return Quaternion.LookRotation(forward, upwards);
     }
 
 }

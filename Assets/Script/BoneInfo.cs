@@ -10,13 +10,17 @@ public class BoneInfo : MonoBehaviour
     private TextMeshPro boneText;
 
     private OVRBone bone;
+    private int num;
 
-    public void AddBone(OVRBone bone) => this.bone = bone;
+    public void AddBone(OVRBone bone, int num){
+        this.bone = bone;
+        this.num = num;
+    } 
 
     void Update()
     {
         if (bone == null) return;
-        boneText.text = $"{bone.Id}";
+        boneText.text = num.ToString();
         transform.position = bone.Transform.position;
         transform.rotation = bone.Transform.rotation;
     }
