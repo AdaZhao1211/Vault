@@ -11,6 +11,14 @@ public class BasicHandPlayback : MonoBehaviour
     [SerializeField]
     [Header("Parent of hand joints")] // Should have 21 children.
     public GameObject _playbackObject;
+
+    [SerializeField]
+    [Header("Left Hand IK")]
+    public GameObject _leftHand;
+
+    [SerializeField]
+    [Header("Right Hand IK")]
+    public GameObject _rightHand;
    
     [SerializeField]
     [Header("Location of Log File")]
@@ -18,7 +26,7 @@ public class BasicHandPlayback : MonoBehaviour
 
     [SerializeField]
     [Header("Sampling rate")]
-    private float _readInterval;
+    private float _readInterval = 0.03f;
  
     [SerializeField]
     [Header("Debug Scrubber")] // Allows to move to different point in playback - modify the range based on the number of sampled points.
@@ -49,9 +57,7 @@ public class BasicHandPlayback : MonoBehaviour
                 string path = Application.persistentDataPath + "/test.txt";
                 //Read the text from directly from the test.txt file
                 StreamReader reader = new StreamReader(path);
-                // Debug.Log(reader.ReadToEnd());
                 lines = reader.ReadToEnd().Split("\n");
-                // Debug.Log(lines);
                 reader.Close();
                 _readFile = true;
             }
@@ -64,7 +70,7 @@ public class BasicHandPlayback : MonoBehaviour
                 timer = 0f;
 
                 // Check for index out of bounds
-                if (_currentIndex >= lines.Length)
+                if (_currentIndex >= lines.Length-1)
                 {
                     _currentIndex = 0;
                 }
@@ -75,8 +81,6 @@ public class BasicHandPlayback : MonoBehaviour
                 
                 // Set the index of the next line to read
                 _currentIndex++;
-
-                
             }
 
 
@@ -94,17 +98,138 @@ public class BasicHandPlayback : MonoBehaviour
     {
         // New line format: "092443800#(0.00, 0.00, 0.00)#(0.00, 0.00, 0.00)#..." - Timestamp + 21 position values
         string[] parts = line.Split('#');
+        Transform _leftHandChild = _leftHand.transform.GetChild(0).GetChild(0);
+        Transform _rightHandChild = _rightHand.transform.GetChild(0).GetChild(0);
+
 
         // Cycle for each position value obtained (value at index 0 is timestamp - useful for syncing two hands/multiple recordings from the same session)
-        for(int i = 1; i< parts.Length-1; i++)
-        {
-            string tempPosString = parts[i].Replace("(", "").Replace(")", "");
-            Vector3 tempPos = ParseVector3(tempPosString);
-            _playbackObject.transform.GetChild(i-1).localPosition = tempPos;
+        // for(int i = 1; i< 25; i++)
+        // {
+        //     Matrix4x4 HandMatrix = ConvertStringToMatrix(parts[i]);
+        //     _playbackObject.transform.GetChild(i-1).localPosition = new Vector3(HandMatrix[0,3], HandMatrix[1,3], HandMatrix[2,3]);
+        // }
+
+        // right hand
+        Matrix4x4 HandMatrix1 = ConvertStringToMatrix(parts[1]);
+        _rightHandChild.localRotation = ExtractRotation(HandMatrix1);
+        _rightHandChild.localPosition = new Vector3(HandMatrix1[0,3], HandMatrix1[1,3], HandMatrix1[2,3]);
+
+
+        Transform thumb = _rightHandChild.Find("b_r_thumb0");
+        Matrix4x4 preM = HandMatrix1;
+        for ( int i= 3; i < 7; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+
         }
-        // Debug.Log(parts[parts.Length-1]);
+
+        thumb = _rightHandChild.Find("b_r_index1");
+        preM = HandMatrix1;
+        for ( int i= 7; i < 10; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+
+        thumb = _rightHandChild.Find("b_r_middle1");
+        preM = HandMatrix1;
+        for ( int i= 10; i < 13; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+
+        thumb = _rightHandChild.Find("b_r_ring1");
+        preM = HandMatrix1;
+        for ( int i= 13; i < 16; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+
+        thumb = _rightHandChild.Find("b_r_pinky0");
+        preM = HandMatrix1;
+        for ( int i= 16; i < 20; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+
+        // ----------------
+        // left hand
+        Matrix4x4 HandMatrix25 = ConvertStringToMatrix(parts[25]);
+        _leftHandChild.localRotation = ExtractRotation(HandMatrix25);
+        _leftHandChild.localPosition = new Vector3(HandMatrix25[0,3], HandMatrix25[1,3], HandMatrix25[2,3]);
+
+
+        thumb = _leftHandChild.Find("b_l_thumb0");
+        preM = HandMatrix25;
+        for ( int i= 27; i < 31; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb.localPosition = new Vector3(HandRela[0,3], HandRela[1,3], HandRela[2,3]);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+
+        }
+
+        thumb = _leftHandChild.Find("b_l_index1");
+        preM = HandMatrix25;
+        for ( int i= 31; i < 34; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+
+        thumb = _leftHandChild.Find("b_l_middle1");
+        preM = HandMatrix25;
+        for ( int i= 34; i < 37; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+
+        thumb = _leftHandChild.Find("b_l_ring1");
+        preM = HandMatrix25;
+        for ( int i= 37; i < 40; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+
+        thumb = _leftHandChild.Find("b_l_pinky0");
+        preM = HandMatrix25;
+        for ( int i= 40; i < 44; i++){
+            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
+            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
+            thumb.localRotation = ExtractRotation(HandRela);
+            thumb = thumb.GetChild(0);
+            preM = HandMatrixNow;
+        }
+        
+        // head
         Matrix4x4 HeadMatrix = ConvertStringToMatrix(parts[parts.Length-1]);
-        _playbackObject.transform.GetChild(parts.Length-2).localPosition = new Vector3(HeadMatrix[0,3], HeadMatrix[1,3], HeadMatrix[2,3]);;
+        _playbackObject.transform.GetChild(parts.Length-2).localRotation = ExtractRotation(HeadMatrix);
+        _playbackObject.transform.GetChild(parts.Length-2).localPosition = new Vector3(HeadMatrix[0,3], HeadMatrix[1,3], HeadMatrix[2,3]);
+
     }
 
     private Matrix4x4 ConvertStringToMatrix(string line)
@@ -125,8 +250,23 @@ public class BasicHandPlayback : MonoBehaviour
 
         }
         
-        Debug.Log(tempMatrix);
         return tempMatrix;
+    }
+
+
+    private Quaternion ExtractRotation(Matrix4x4 matrix)
+    {
+        Vector3 forward;
+        forward.x = matrix.m02;
+        forward.y = matrix.m12;
+        forward.z = matrix.m22;
+ 
+        Vector3 upwards;
+        upwards.x = matrix.m01;
+        upwards.y = matrix.m11;
+        upwards.z = matrix.m21;
+ 
+        return Quaternion.LookRotation(forward, upwards);
     }
 
     /// <summary>

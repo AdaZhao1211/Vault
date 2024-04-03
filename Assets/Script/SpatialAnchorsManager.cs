@@ -34,6 +34,12 @@ public class SpatialAnchorsManager : MonoBehaviour
     [SerializeField]
     private GameObject _replayAnchor;
 
+    [SerializeField]
+    private GameObject _replayLeftHand;
+
+    [SerializeField]
+    private GameObject _replayRightHand;
+
     public Vector3 AnchorPosition;
     public Transform AnchorTransform;
     public Matrix4x4 AnchorMatrix;
@@ -112,16 +118,25 @@ public class SpatialAnchorsManager : MonoBehaviour
                 timer = 0f;
                 writer.Write(System.DateTime.Now.ToString());
                 writer.Write("#");
-                // writer.WriteLine("Test");
                 for (int i = 0; i < 24; i++){
-                    writer.Write(RightHand.GetComponent<RecordSkeleton>().HandSkeletonPos[i].ToString());
+                    Matrix4x4 tempHand = RightHand.GetComponent<RecordSkeleton>().HandSkeletonM[i];
+                    for (int j = 0; j < 4; j++){
+                        writer.Write(tempHand.GetRow(j));
+                        if ( j != 3) writer.Write("$");
+                    }
                     writer.Write("#");
                 }
-
                 for (int i = 0; i < 24; i++){
-                    writer.Write(LeftHand.GetComponent<RecordSkeleton>().HandSkeletonPos[i].ToString());
+                    Matrix4x4 tempHand = LeftHand.GetComponent<RecordSkeleton>().HandSkeletonM[i];
+                    for (int j = 0; j < 4; j++){
+                        writer.Write(tempHand.GetRow(j));
+                        if ( j != 3) writer.Write("$");
+                    }
+                    // writer.Write(LeftHand.GetComponent<RecordSkeleton>().HandSkeletonPos[i].ToString());
                     writer.Write("#");
                 }
+                // writer.Write(Head.GetComponent<HeadTracking>().HeadPos);
+                // writer.Write("#");
                 for (int i = 0; i < 4; i++){
                     writer.Write(Head.GetComponent<HeadTracking>().HeadMatrix.GetRow(i));
                     if ( i != 3) writer.Write("$");
@@ -156,6 +171,9 @@ public class SpatialAnchorsManager : MonoBehaviour
         if(Mode == 2){
             if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
                 _replayAnchor.transform.position = _anchorPlacementTransform.position;
+                _replayLeftHand.transform.position = _anchorPlacementTransform.position;
+                _replayRightHand.transform.position = _anchorPlacementTransform.position;
+
                 // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
                 Mode = 3;
             } 

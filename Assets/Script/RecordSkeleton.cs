@@ -29,6 +29,8 @@ public class RecordSkeleton : MonoBehaviour
     public Vector3 IndexTipPos;
 
     public Vector3[] HandSkeletonPos;
+    public Matrix4x4[] HandSkeletonM;
+
 
 
     private void Awake()
@@ -41,6 +43,8 @@ public class RecordSkeleton : MonoBehaviour
     private void Start()
     {
         HandSkeletonPos = new Vector3[24];
+        HandSkeletonM = new Matrix4x4[24];
+
 
     }
 
@@ -105,17 +109,20 @@ public class RecordSkeleton : MonoBehaviour
         int i = 0;
         foreach (var bone in handSkeleton.Bones){
             
-            if(i == 20){
-                IndexTipPos = bone.Transform.position;
-            }
+            
             // Vector3 relativePosition = bone.Transform.position - _recordingMode.GetComponent<SpatialAnchorsManager>().AnchorPosition;
             Vector3 relativePosition = constructedAnchorTransform.InverseTransformPoint(bone.Transform.position);
             HandSkeletonPos[i] = relativePosition;
+            HandSkeletonM[i] = RecordingMode.AnchorMatrix.inverse * bone.Transform.localToWorldMatrix;
 
             // Vector3 relativePosition = bone.Transform.position;
             // log bone position to file
             // _oscmessage.values.Add(relativePosition.ToString());
             _oscmessage.values.Add(relativePosition.ToString());
+            if(i == 20){
+                IndexTipPos = bone.Transform.position;
+                // Debug.Log(HandSkeletonM[i]);
+            }
             i ++;
             
         }

@@ -39,9 +39,7 @@ public class HeadTracking : MonoBehaviour
 
             // HeadPos = constructedAnchorTransform.InverseTransformPoint(this.transform.position);
             
-            HeadMatrix = transform.localToWorldMatrix * RecordingMode.AnchorMatrix.inverse;
-            //HeadPos = new Vector3(HeadMatrix[0,3], HeadMatrix[1,3], HeadMatrix[2,3]);
-            Debug.Log(HeadMatrix);
+            HeadMatrix = RecordingMode.AnchorMatrix.inverse * transform.localToWorldMatrix;
 
         }
         
