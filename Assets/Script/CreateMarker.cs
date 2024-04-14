@@ -5,7 +5,7 @@ using UnityEngine;
 public class CreateMarker : MonoBehaviour
 {
     [SerializeField]
-    private GameObject _recordingManager;
+    private SpatialAnchorsManager RecordingMode;
 
     [SerializeField]
     private GameObject _statusText;
@@ -25,9 +25,10 @@ public class CreateMarker : MonoBehaviour
 
     private List<GameObject> _recordMarkers;
 
-    public string MakerType;
-    public Vector3 MakerPos;
-    public Quaternion MakerQua;
+    public string MarkerType;
+    public Matrix4x4 MarkerMatrix;
+    public bool NeedtoRecord;
+
 
     private float _recordingInterval = 0.03f;
     private float _timer = 0f;
@@ -41,15 +42,18 @@ public class CreateMarker : MonoBehaviour
     void Start()
     {
         _recordMarkers = new List<GameObject>();
+        NeedtoRecord = false;
         
     }
 
     // Update is called once per frame
     void Update()
     {
-        // if(_recordingManager.Mode == 1){
+
+        // if(RecordingMode.Mode == 1){
+        //     // first save the anchor
         //     if (!_findAnchor){
-        //         var theAcnhorMatrix = _recordingManager.AnchorMatrix;
+        //         var theAcnhorMatrix = RecordingMode.AnchorMatrix;
         //         Vector3 anchorP = new Vector3(theAcnhorMatrix[0,3], theAcnhorMatrix[1,3], theAcnhorMatrix[2,3]);
         //         Quaternion anchorR = ExtractRotation(theAcnhorMatrix);
         //         constructedAnchorTransform = new GameObject().transform;
@@ -58,20 +62,9 @@ public class CreateMarker : MonoBehaviour
         //         constructedAnchorTransform.rotation = anchorR;
         //         constructedAnchorTransform.localScale = new Vector3(1, 1, 1);
         //         _findAnchor = true;
-        //     }
-
-
-            
+        //     }            
 
         // }
-
-        // reset time
-            // _timer += Time.deltaTime;
-            // if (_timer >= _recordingInterval)
-            // {
-            //     _timer = 0f;
-            //     MakerType = "";
-            // }
         
         
     }
@@ -81,11 +74,11 @@ public class CreateMarker : MonoBehaviour
         Vector3 upwards = _camera.transform.position - _handTracking.GetComponent<RecordSkeleton>().IndexTipPos;
         Vector3 forward = new Vector3(0, -1, 0);
         _recordMarkers.Add(Instantiate(_turnMarker, _handTracking.GetComponent<RecordSkeleton>().IndexTipPos, Quaternion.LookRotation(forward, upwards)));
-        MakerType = "turn";
-        MakerPos = _handTracking.GetComponent<RecordSkeleton>().IndexTipPos;
-        MakerQua = Quaternion.LookRotation(forward, upwards);
-        // _timer = 0f;
+        // assign matrix here for recording
+        MarkerType = "turn";
+        MarkerMatrix = RecordingMode.AnchorMatrix.inverse * _recordMarkers[^1].transform.localToWorldMatrix;
         Debug.Log("creating turn marker");
+        NeedtoRecord = true;
     }
 
     public void CreateSelectMarker(){
@@ -93,12 +86,12 @@ public class CreateMarker : MonoBehaviour
         Vector3 upwards = _camera.transform.position - _handTracking.GetComponent<RecordSkeleton>().IndexTipPos;
         Vector3 forward = new Vector3(0, -1, 0);
         _recordMarkers.Add(Instantiate(_selectMarker, _handTracking.GetComponent<RecordSkeleton>().IndexTipPos, Quaternion.LookRotation(forward, upwards)));
-        // MakerType = "turn";
-        // MakerPos = _handTracking.GetComponent<RecordSkeleton>().IndexTipPos;
-        // MakerQua = Quaternion.LookRotation(forward, upwards);
-        // _timer = 0f;
+        MarkerType = "select";
+        MarkerMatrix = RecordingMode.AnchorMatrix.inverse * _recordMarkers[^1].transform.localToWorldMatrix;
         Debug.Log("creating select marker");
+        NeedtoRecord = true;
     }
+
 
     public void DestroyAllMarker(){
         foreach(var marker in _recordMarkers){

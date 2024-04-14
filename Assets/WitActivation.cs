@@ -30,20 +30,19 @@ using Oculus.Voice;
 
             if (_recordManager.GetComponent<SpatialAnchorsManager>().Mode == 1)
             {
-                Debug.Log("*** hand recording & listening ***");
                 ActivateWit();
                 turnonWit = true;
             }
          }
 
-         if(turnonWit){
+        if(turnonWit){
             if (_recordManager.GetComponent<SpatialAnchorsManager>().Mode == 2)
             {
                 // _voiceExperience.Deactivate();
                 turnonWit = false;
             }
 
-         }
+        }
 
 
      }
@@ -53,6 +52,7 @@ using Oculus.Voice;
      /// </summary>
      public void ActivateWit()
      {
+        Debug.Log("activate");
          _voiceExperience.Activate();
      }
  }

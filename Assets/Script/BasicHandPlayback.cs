@@ -41,6 +41,12 @@ public class BasicHandPlayback : MonoBehaviour
     [SerializeField]
     private SpatialAnchorsManager RecordingMode;
 
+    [SerializeField]
+    private GameObject _selectMarker;
+
+    [SerializeField]
+    private GameObject _turnMarker;
+
     void Start()
     {
 
@@ -50,7 +56,6 @@ public class BasicHandPlayback : MonoBehaviour
     void Update()
     {
         if(RecordingMode.Mode == 3){
-            // Debug.Log("replaying");
             //replaying
             if(!_readFile){
                 // need to read file
@@ -226,9 +231,25 @@ public class BasicHandPlayback : MonoBehaviour
         }
         
         // head
-        Matrix4x4 HeadMatrix = ConvertStringToMatrix(parts[parts.Length-1]);
-        _playbackObject.transform.GetChild(parts.Length-2).localRotation = ExtractRotation(HeadMatrix);
-        _playbackObject.transform.GetChild(parts.Length-2).localPosition = new Vector3(HeadMatrix[0,3], HeadMatrix[1,3], HeadMatrix[2,3]);
+        Matrix4x4 HeadMatrix = ConvertStringToMatrix(parts[49]);
+        _playbackObject.transform.GetChild(0).localRotation = ExtractRotation(HeadMatrix);
+        _playbackObject.transform.GetChild(0).localPosition = new Vector3(HeadMatrix[0,3], HeadMatrix[1,3], HeadMatrix[2,3]);
+
+        // marker?
+        if(parts.Length > 49){
+            // there is marker
+            // marker type # matrix 4x4
+            if(parts[50] == "turn"){
+                Matrix4x4 MarkerMatrix = RecordingMode.AnchorMatrix * ConvertStringToMatrix(parts[51]);
+                Debug.Log(MarkerMatrix);
+                Instantiate(_turnMarker, new Vector3(MarkerMatrix[0,3], MarkerMatrix[1,3], MarkerMatrix[2,3]), ExtractRotation(MarkerMatrix));
+            }
+            if(parts[50] == "select"){
+                Matrix4x4 MarkerMatrix = RecordingMode.AnchorMatrix * ConvertStringToMatrix(parts[51]);
+                // Instantiate(_selectMarker, new Vector3(MarkerMatrix[0,3], MarkerMatrix[1,3], MarkerMatrix[2,3]), ExtractRotation(MarkerMatrix));
+            }
+        }
+
 
     }
 

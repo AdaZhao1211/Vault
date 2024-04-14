@@ -44,8 +44,6 @@ public class SpatialAnchorsManager : MonoBehaviour
     public Transform AnchorTransform;
     public Matrix4x4 AnchorMatrix;
 
-
-
     public bool HandRecording = false;
     private float _recordingInterval = 0.03f;
 
@@ -61,6 +59,9 @@ public class SpatialAnchorsManager : MonoBehaviour
 
     [SerializeField]
     private GameObject Head;
+
+    [SerializeField]
+    private GameObject Marker;
 
     private GameObject _recordAnchor;
 
@@ -118,6 +119,7 @@ public class SpatialAnchorsManager : MonoBehaviour
                 timer = 0f;
                 writer.Write(System.DateTime.Now.ToString());
                 writer.Write("#");
+                // hands
                 for (int i = 0; i < 24; i++){
                     Matrix4x4 tempHand = RightHand.GetComponent<RecordSkeleton>().HandSkeletonM[i];
                     for (int j = 0; j < 4; j++){
@@ -132,14 +134,24 @@ public class SpatialAnchorsManager : MonoBehaviour
                         writer.Write(tempHand.GetRow(j));
                         if ( j != 3) writer.Write("$");
                     }
-                    // writer.Write(LeftHand.GetComponent<RecordSkeleton>().HandSkeletonPos[i].ToString());
                     writer.Write("#");
                 }
-                // writer.Write(Head.GetComponent<HeadTracking>().HeadPos);
-                // writer.Write("#");
+                // head
                 for (int i = 0; i < 4; i++){
                     writer.Write(Head.GetComponent<HeadTracking>().HeadMatrix.GetRow(i));
                     if ( i != 3) writer.Write("$");
+                }
+                writer.Write("#");
+                // marker
+                if( Marker.GetComponent<CreateMarker>().NeedtoRecord){
+                    // if there is marker need to be recorded
+                    writer.Write(Marker.GetComponent<CreateMarker>().MarkerType);
+                    writer.Write("#");
+                    for (int i = 0; i < 4; i++){
+                        writer.Write(Marker.GetComponent<CreateMarker>().MarkerMatrix.GetRow(i));
+                        if ( i != 3) writer.Write("$");
+                    }
+                    Marker.GetComponent<CreateMarker>().NeedtoRecord = false;
                 }
                 writer.Write("\n");
             }
@@ -157,14 +169,17 @@ public class SpatialAnchorsManager : MonoBehaviour
                 writer.Close();
                 Mode = 2; // to replay
                 Destroy(_recordAnchor);
+                Marker.GetComponent<CreateMarker>().DestroyAllMarker();
 
                 // print the recorded txt file
 
-                string path = Application.persistentDataPath + "/test.txt";
-                //Read the text from directly from the test.txt file
-                StreamReader reader = new StreamReader(path);
-                Debug.Log(reader.ReadToEnd());
-                reader.Close();
+                // string path = Application.persistentDataPath + "/test.txt";
+                // //Read the text from directly from the test.txt file
+                // StreamReader reader = new StreamReader(path);
+                // Debug.Log(reader.ReadToEnd());
+                // reader.Close();
+
+                
             }
         }
 
@@ -173,6 +188,8 @@ public class SpatialAnchorsManager : MonoBehaviour
                 _replayAnchor.transform.position = _anchorPlacementTransform.position;
                 _replayLeftHand.transform.position = _anchorPlacementTransform.position;
                 _replayRightHand.transform.position = _anchorPlacementTransform.position;
+                AnchorMatrix = _anchorPlacementTransform.localToWorldMatrix;
+                Debug.Log(AnchorMatrix.ToString());
 
                 // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
                 Mode = 3;
