@@ -27,6 +27,8 @@ public class CreateMarker : MonoBehaviour
 
     public string MarkerType;
     public Matrix4x4 MarkerMatrix;
+    public Vector3 MarkerPos;
+    public Quaternion MarkerQua;
     public bool NeedtoRecord;
 
 
@@ -76,7 +78,9 @@ public class CreateMarker : MonoBehaviour
         _recordMarkers.Add(Instantiate(_turnMarker, _handTracking.GetComponent<RecordSkeleton>().IndexTipPos, Quaternion.LookRotation(forward, upwards)));
         // assign matrix here for recording
         MarkerType = "turn";
-        MarkerMatrix = RecordingMode.AnchorMatrix.inverse * _recordMarkers[^1].transform.localToWorldMatrix;
+        // MarkerMatrix = RecordingMode.AnchorMatrix.inverse * _recordMarkers[^1].transform.localToWorldMatrix;
+        MarkerPos = RecordingMode.AnchorTransform.InverseTransformPoint(_recordMarkers[^1].transform.position);
+        MarkerQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * _recordMarkers[^1].transform.rotation;
         Debug.Log("creating turn marker");
         NeedtoRecord = true;
     }
@@ -87,7 +91,8 @@ public class CreateMarker : MonoBehaviour
         Vector3 forward = new Vector3(0, -1, 0);
         _recordMarkers.Add(Instantiate(_selectMarker, _handTracking.GetComponent<RecordSkeleton>().IndexTipPos, Quaternion.LookRotation(forward, upwards)));
         MarkerType = "select";
-        MarkerMatrix = RecordingMode.AnchorMatrix.inverse * _recordMarkers[^1].transform.localToWorldMatrix;
+        MarkerPos = RecordingMode.AnchorTransform.InverseTransformPoint(_recordMarkers[^1].transform.position);
+        MarkerQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * _recordMarkers[^1].transform.rotation;
         Debug.Log("creating select marker");
         NeedtoRecord = true;
     }

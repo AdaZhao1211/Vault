@@ -5,13 +5,19 @@ using UnityEngine;
 public class HeadTracking : MonoBehaviour
 {
     public Matrix4x4 HeadMatrix;
-    // public Vector3 HeadPos;
 
-    private Transform constructedAnchorTransform;
+    // to send out head transformation
+    public Vector3 HeadPos;
+    public Quaternion HeadQua;
+
+    // access recording mode
     [SerializeField]
     private SpatialAnchorsManager RecordingMode;
 
+    // private variable for internal use
     private bool _findAnchor = false;
+    private Transform constructedAnchorTransform;
+
 
     // Start is called before the first frame update
     void Start()
@@ -37,9 +43,12 @@ public class HeadTracking : MonoBehaviour
                 _findAnchor = true;
             }
 
-            // HeadPos = constructedAnchorTransform.InverseTransformPoint(this.transform.position);
+            HeadPos = RecordingMode.AnchorTransform.InverseTransformPoint(this.transform.position);
+
+            HeadQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * this.transform.rotation;
+
             
-            HeadMatrix = RecordingMode.AnchorMatrix.inverse * transform.localToWorldMatrix;
+            // HeadMatrix = RecordingMode.AnchorMatrix.inverse * transform.localToWorldMatrix;
 
         }
         

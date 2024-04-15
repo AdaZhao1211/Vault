@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using System.IO;
+using Oculus.Voice;
 
 /// <summary>
 /// Manages UI of anchor sample.
@@ -27,12 +28,10 @@ public class SpatialAnchorsManager : MonoBehaviour
     // the one to create
     [SerializeField]
     private GameObject _anchorPrefab;
-    // public Anchor AnchorPrefab => _anchorPrefab;
-
 
     // the one to create
     [SerializeField]
-    private GameObject _replayAnchor;
+    private GameObject _demoAnchorPrefab;
 
     [SerializeField]
     private GameObject _replayLeftHand;
@@ -44,7 +43,6 @@ public class SpatialAnchorsManager : MonoBehaviour
     public Transform AnchorTransform;
     public Matrix4x4 AnchorMatrix;
 
-    public bool HandRecording = false;
     private float _recordingInterval = 0.03f;
 
     private StreamWriter writer;
@@ -63,7 +61,12 @@ public class SpatialAnchorsManager : MonoBehaviour
     [SerializeField]
     private GameObject Marker;
 
+    [SerializeField]
+    private GameObject VoiceCommand;
+
     private GameObject _recordAnchor;
+    private GameObject _replayAnchor;
+
 
 
 
@@ -102,6 +105,8 @@ public class SpatialAnchorsManager : MonoBehaviour
             if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
             // Debug.Log("button down");
                 PlaceAnchor();
+                AnchorTransform = _recordAnchor.transform;
+
 
                 // create a new empty file
                 OscMessage _oscmessage = new OscMessage();
@@ -137,21 +142,22 @@ public class SpatialAnchorsManager : MonoBehaviour
                     writer.Write("#");
                 }
                 // head
-                for (int i = 0; i < 4; i++){
-                    writer.Write(Head.GetComponent<HeadTracking>().HeadMatrix.GetRow(i));
-                    if ( i != 3) writer.Write("$");
-                }
+                writer.Write(Head.GetComponent<HeadTracking>().HeadPos);
+                writer.Write("$");
+                writer.Write(Head.GetComponent<HeadTracking>().HeadQua);
                 writer.Write("#");
+
                 // marker
                 if( Marker.GetComponent<CreateMarker>().NeedtoRecord){
                     // if there is marker need to be recorded
                     writer.Write(Marker.GetComponent<CreateMarker>().MarkerType);
                     writer.Write("#");
-                    for (int i = 0; i < 4; i++){
-                        writer.Write(Marker.GetComponent<CreateMarker>().MarkerMatrix.GetRow(i));
-                        if ( i != 3) writer.Write("$");
-                    }
+                    writer.Write(Marker.GetComponent<CreateMarker>().MarkerPos);
+                    writer.Write("$");
+                    writer.Write(Marker.GetComponent<CreateMarker>().MarkerQua);
+                    writer.Write("#");
                     Marker.GetComponent<CreateMarker>().NeedtoRecord = false;
+                    VoiceCommand.GetComponent<AppVoiceExperience>().Activate();
                 }
                 writer.Write("\n");
             }
@@ -185,10 +191,13 @@ public class SpatialAnchorsManager : MonoBehaviour
 
         if(Mode == 2){
             if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
-                _replayAnchor.transform.position = _anchorPlacementTransform.position;
+                // _replayAnchor.transform.position = _anchorPlacementTransform.position;
                 _replayLeftHand.transform.position = _anchorPlacementTransform.position;
                 _replayRightHand.transform.position = _anchorPlacementTransform.position;
                 AnchorMatrix = _anchorPlacementTransform.localToWorldMatrix;
+                PlaceReplayAnchor();
+                AnchorTransform = _replayAnchor.transform;
+                Debug.Log(AnchorTransform.position);
                 Debug.Log(AnchorMatrix.ToString());
 
                 // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
@@ -209,14 +218,17 @@ public class SpatialAnchorsManager : MonoBehaviour
     private void PlaceAnchor()
     {
         AnchorMatrix = _anchorPlacementTransform.localToWorldMatrix;
-
         AnchorPosition = new Vector3(AnchorMatrix[0,3], AnchorMatrix[1,3], AnchorMatrix[2,3]);
 
-        // AnchorTransform = _anchorPlacementTransform;
         // check once!!!
         _recordAnchor = (GameObject)Instantiate(_anchorPrefab, _anchorPlacementTransform.position, _anchorPlacementTransform.rotation);
-        // AnchorTransform = _anchorPrefab.transform;
-        HandRecording = true;
+    }
+
+    private void PlaceReplayAnchor()
+    {
+
+        // check once!!!
+        _replayAnchor = (GameObject)Instantiate(_demoAnchorPrefab, _anchorPlacementTransform.position, _anchorPlacementTransform.rotation);
     }
 
 

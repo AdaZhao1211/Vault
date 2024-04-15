@@ -9,20 +9,13 @@ using System.IO;
 public class BasicHandPlayback : MonoBehaviour
 {
     [SerializeField]
-    [Header("Parent of hand joints")] // Should have 21 children.
-    public GameObject _playbackObject;
+    public GameObject _headplayback;
 
     [SerializeField]
-    [Header("Left Hand IK")]
     public GameObject _leftHand;
 
     [SerializeField]
-    [Header("Right Hand IK")]
     public GameObject _rightHand;
-   
-    [SerializeField]
-    [Header("Location of Log File")]
-    private string _logFilePath;
 
     [SerializeField]
     [Header("Sampling rate")]
@@ -47,6 +40,11 @@ public class BasicHandPlayback : MonoBehaviour
     [SerializeField]
     private GameObject _turnMarker;
 
+    private Vector3 anchorPos;
+    private Quaternion anchorQua;
+    private bool firstTime = true;
+
+
     void Start()
     {
 
@@ -65,6 +63,9 @@ public class BasicHandPlayback : MonoBehaviour
                 lines = reader.ReadToEnd().Split("\n");
                 reader.Close();
                 _readFile = true;
+
+                anchorPos = new Vector3(RecordingMode.AnchorMatrix[0,3], RecordingMode.AnchorMatrix[1,3], RecordingMode.AnchorMatrix[2,3]);
+                anchorQua = ExtractRotation(RecordingMode.AnchorMatrix);
             }
             timer += Time.deltaTime;
 
@@ -78,6 +79,7 @@ public class BasicHandPlayback : MonoBehaviour
                 if (_currentIndex >= lines.Length-1)
                 {
                     _currentIndex = 0;
+                    firstTime = false;
                 }
 
                 // Read line from file, and apply transforms to joints
@@ -231,22 +233,25 @@ public class BasicHandPlayback : MonoBehaviour
         }
         
         // head
-        Matrix4x4 HeadMatrix = ConvertStringToMatrix(parts[49]);
-        _playbackObject.transform.GetChild(0).localRotation = ExtractRotation(HeadMatrix);
-        _playbackObject.transform.GetChild(0).localPosition = new Vector3(HeadMatrix[0,3], HeadMatrix[1,3], HeadMatrix[2,3]);
+        var headInfo = ConvertStringToInfo(parts[49]);
+        _headplayback.transform.position = RecordingMode.AnchorTransform.TransformPoint(headInfo.Item1);
+        _headplayback.transform.rotation = RecordingMode.AnchorTransform.rotation * headInfo.Item2;
 
         // marker?
-        if(parts.Length > 49){
+        if(parts.Length > 49 && firstTime){
             // there is marker
             // marker type # matrix 4x4
             if(parts[50] == "turn"){
-                Matrix4x4 MarkerMatrix = RecordingMode.AnchorMatrix * ConvertStringToMatrix(parts[51]);
-                Debug.Log(MarkerMatrix);
-                Instantiate(_turnMarker, new Vector3(MarkerMatrix[0,3], MarkerMatrix[1,3], MarkerMatrix[2,3]), ExtractRotation(MarkerMatrix));
+                var MInfo = ConvertStringToInfo(parts[51]);
+                Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                Instantiate(_turnMarker, MPos, MQua);
             }
             if(parts[50] == "select"){
-                Matrix4x4 MarkerMatrix = RecordingMode.AnchorMatrix * ConvertStringToMatrix(parts[51]);
-                // Instantiate(_selectMarker, new Vector3(MarkerMatrix[0,3], MarkerMatrix[1,3], MarkerMatrix[2,3]), ExtractRotation(MarkerMatrix));
+                var MInfo = ConvertStringToInfo(parts[51]);
+                Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                Instantiate(_selectMarker, MPos, MQua);
             }
         }
 
@@ -274,6 +279,17 @@ public class BasicHandPlayback : MonoBehaviour
         return tempMatrix;
     }
 
+    private (Vector3, Quaternion) ConvertStringToInfo(string line)
+    {
+
+        string[] parts = line.Split('$');
+        Vector3 pos = ParseVector3(parts[0]);
+        Quaternion qua = ParseQua(parts[1]);
+        
+        
+        return (pos, qua);
+    }
+
 
     private Quaternion ExtractRotation(Matrix4x4 matrix)
     {
@@ -297,7 +313,9 @@ public class BasicHandPlayback : MonoBehaviour
     /// <returns></returns>
     Vector3 ParseVector3(string vectorString)
     {
-        string[] components = vectorString.Split(',');
+
+        string tempPosString = vectorString.Replace("(", "").Replace(")", "");
+        string[] components = tempPosString.Split(',');
 
         float x = float.Parse(components[0]);
         float y = float.Parse(components[1]);
@@ -316,5 +334,19 @@ public class BasicHandPlayback : MonoBehaviour
         float z = float.Parse(components[2]);
         float w = float.Parse(components[3]);
         return new Vector4(x, y, z, w);
+    }
+
+    Quaternion ParseQua(string quaString)
+    {
+        string tempPosString = quaString.Replace("(", "").Replace(")", "");
+
+        string[] components = tempPosString.Split(',');
+
+        float x = float.Parse(components[0]);
+        float y = float.Parse(components[1]);
+        float z = float.Parse(components[2]);
+        float w = float.Parse(components[3]);
+
+        return new Quaternion(x, y, z, w);
     }
 }
