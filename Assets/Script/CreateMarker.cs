@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Oculus.Voice;
+
 
 public class CreateMarker : MonoBehaviour
 {
@@ -21,7 +23,10 @@ public class CreateMarker : MonoBehaviour
     private GameObject _selectMarker;
 
     [SerializeField]
-    private GameObject _camera; 
+    private GameObject _camera;
+
+    [SerializeField]
+    private AppVoiceExperience WitExp;
 
     private List<GameObject> _recordMarkers;
 
@@ -30,6 +35,8 @@ public class CreateMarker : MonoBehaviour
     public Vector3 MarkerPos;
     public Quaternion MarkerQua;
     public bool NeedtoRecord;
+    public bool NeedtoActivate;
+
 
 
     private float _recordingInterval = 0.03f;
@@ -45,6 +52,7 @@ public class CreateMarker : MonoBehaviour
     {
         _recordMarkers = new List<GameObject>();
         NeedtoRecord = false;
+        NeedtoActivate = false;
         
     }
 
@@ -74,7 +82,7 @@ public class CreateMarker : MonoBehaviour
     public void CreateTurnMarker(){
         _statusText.GetComponent<TMPro.TextMeshProUGUI>().text = "Create Turn Marker";
         Vector3 upwards = _camera.transform.position - _handTracking.GetComponent<RecordSkeleton>().IndexTipPos;
-        Vector3 forward = new Vector3(0, -1, 0);
+        Vector3 forward = -_camera.transform.up;
         _recordMarkers.Add(Instantiate(_turnMarker, _handTracking.GetComponent<RecordSkeleton>().IndexTipPos, Quaternion.LookRotation(forward, upwards)));
         // assign matrix here for recording
         MarkerType = "turn";
@@ -87,14 +95,22 @@ public class CreateMarker : MonoBehaviour
 
     public void CreateSelectMarker(){
         _statusText.GetComponent<TMPro.TextMeshProUGUI>().text = "Create Select Marker";
-        Vector3 upwards = _camera.transform.position - _handTracking.GetComponent<RecordSkeleton>().IndexTipPos;
-        Vector3 forward = new Vector3(0, -1, 0);
+        Vector3 forward = _camera.transform.position - _handTracking.GetComponent<RecordSkeleton>().IndexTipPos;
+        Vector3 upwards = _camera.transform.up;
         _recordMarkers.Add(Instantiate(_selectMarker, _handTracking.GetComponent<RecordSkeleton>().IndexTipPos, Quaternion.LookRotation(forward, upwards)));
         MarkerType = "select";
         MarkerPos = RecordingMode.AnchorTransform.InverseTransformPoint(_recordMarkers[^1].transform.position);
         MarkerQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * _recordMarkers[^1].transform.rotation;
         Debug.Log("creating select marker");
         NeedtoRecord = true;
+        // WitExp.Activate();
+
+    }
+
+    public void NeedToActivate(){
+        Debug.Log("trigger from the need to activate function");
+        NeedtoActivate = true;
+
     }
 
 

@@ -29,6 +29,8 @@ public class RecordSkeleton : MonoBehaviour
     public Vector3 IndexTipPos;
 
     public Vector3[] HandSkeletonPos;
+    public Quaternion[] HandSkeletonQua;
+
     public Matrix4x4[] HandSkeletonM;
 
 
@@ -43,6 +45,7 @@ public class RecordSkeleton : MonoBehaviour
     private void Start()
     {
         HandSkeletonPos = new Vector3[24];
+        HandSkeletonQua = new Quaternion[24];
         HandSkeletonM = new Matrix4x4[24];
 
 
@@ -111,8 +114,10 @@ public class RecordSkeleton : MonoBehaviour
             
             
             // Vector3 relativePosition = bone.Transform.position - _recordingMode.GetComponent<SpatialAnchorsManager>().AnchorPosition;
-            Vector3 relativePosition = constructedAnchorTransform.InverseTransformPoint(bone.Transform.position);
+            Vector3 relativePosition = RecordingMode.AnchorTransform.InverseTransformPoint(bone.Transform.position);
+            Quaternion relativeQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * bone.Transform.rotation;
             HandSkeletonPos[i] = relativePosition;
+            HandSkeletonQua[i] = relativeQua;
             HandSkeletonM[i] = RecordingMode.AnchorMatrix.inverse * bone.Transform.localToWorldMatrix;
 
             // Vector3 relativePosition = bone.Transform.position;

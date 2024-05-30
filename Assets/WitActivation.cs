@@ -9,28 +9,29 @@ using Oculus.Voice;
      private bool turnonWit = false;
      private void OnValidate()
      {
-         if (!_voiceExperience) _voiceExperience = GetComponent<AppVoiceExperience>();
-
-
-        _voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(() =>
-        {
-            Debug.Log("request completed");
-        });
-
-        _voiceExperience.AudioEvents.OnMicStartedListening.AddListener(() =>
-        {
-            Debug.Log("start");
-        });
-
-        _voiceExperience.AudioEvents.OnMicStoppedListening.AddListener(() =>
-        {
-            Debug.Log("stoppppp");
-            // _voiceExperience.Activate();
-        });
+         
      }
 
      private void Start()
      {
+        if (!_voiceExperience) _voiceExperience = GetComponent<AppVoiceExperience>();
+
+
+        // _voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(() =>
+        // {
+        //     Debug.Log("request completed");
+        // });
+
+        // _voiceExperience.AudioEvents.OnMicStartedListening.AddListener(() =>
+        // {
+        //     Debug.Log("start");
+        // });
+
+        // _voiceExperience.AudioEvents.OnMicStoppedListening.AddListener(() =>
+        // {
+        //     Debug.Log("stoppppp");
+        //     // _voiceExperience.Activate();
+        // });
         
      }
 

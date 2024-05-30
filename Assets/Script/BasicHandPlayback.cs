@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using UnityEngine.UI;
+using TMPro;
+using UnityEditor;
+using Unity.VisualScripting;
 
 /// <summary>
 /// Basic method to read joint positions from a log file and apply them to the children of the game object on which this script is attached.
@@ -40,9 +44,24 @@ public class BasicHandPlayback : MonoBehaviour
     [SerializeField]
     private GameObject _turnMarker;
 
-    private Vector3 anchorPos;
-    private Quaternion anchorQua;
+    [SerializeField]
+    private GameObject _selectMarkerWT;
+
+    [SerializeField]
+    private GameObject _turnMarkerWT;
+
+    [SerializeField]
+    private GameObject _slider;
+
+    [SerializeField]
+    private GameObject _KeyEventText;
+
+    [SerializeField]
+    private Transform _canvas;
+
     private bool firstTime = true;
+    private bool guidebook = true;
+
 
 
     void Start()
@@ -57,15 +76,30 @@ public class BasicHandPlayback : MonoBehaviour
             //replaying
             if(!_readFile){
                 // need to read file
-                string path = Application.persistentDataPath + "/test.txt";
+                string path = Path.Combine(Application.persistentDataPath, RecordingMode.fname);
+                path += ".txt";
+
                 //Read the text from directly from the test.txt file
                 StreamReader reader = new StreamReader(path);
                 lines = reader.ReadToEnd().Split("\n");
                 reader.Close();
                 _readFile = true;
 
-                anchorPos = new Vector3(RecordingMode.AnchorMatrix[0,3], RecordingMode.AnchorMatrix[1,3], RecordingMode.AnchorMatrix[2,3]);
-                anchorQua = ExtractRotation(RecordingMode.AnchorMatrix);
+                // create timeline
+                _slider.SetActive(true);
+
+                for (int i = 0; i < lines.Length-1; i++){
+                    var singleline = lines[i];
+                    var singleinfo = singleline.Split('#');
+                    if (singleinfo.Length > 49){
+                        
+                            GameObject turnText = Instantiate(_KeyEventText,_canvas);
+                            turnText.GetComponent<RectTransform>().localPosition = new Vector3(i/(float)(lines.Length-1)*3-1.5f,-0.05f,0);
+                            turnText.GetComponent<TextMeshProUGUI>().text = singleinfo[50];
+                    }
+                }
+                
+
             }
             timer += Time.deltaTime;
 
@@ -84,13 +118,48 @@ public class BasicHandPlayback : MonoBehaviour
 
                 // Read line from file, and apply transforms to joints
                 ParseLineAndApplyTransform(lines[_currentIndex]);
-                // Debug.Log("replaying: " + lines[_currentIndex]);
+                _slider.GetComponent<Slider>().value = (float)_currentIndex / (float)(lines.Length-1);
+                Debug.Log(_currentIndex / (lines.Length-1));
                 
                 // Set the index of the next line to read
                 _currentIndex++;
             }
 
 
+        }
+        if(RecordingMode.Mode == 4){
+            Debug.Log("spatial guid mode");
+            if (_readFile && guidebook){
+                int markerN = 1;
+                for (int i = 0; i < lines.Length-1; i++){
+                    var singleline = lines[i];
+                    var singleinfo = singleline.Split('#');
+                    
+                    if (singleinfo.Length > 51){
+                        if(singleinfo[50] == "turn"){
+                            var MInfo = ConvertStringToInfo(singleinfo[51]);
+                            Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                            Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                            GameObject marker = (GameObject)Instantiate(_turnMarkerWT, MPos, MQua);
+                            marker.transform.Find("T").gameObject.GetComponent<TextMeshPro>().text = markerN.ToString();
+
+                        }
+                        if(singleinfo[50] == "select"){
+                            var MInfo = ConvertStringToInfo(singleinfo[51]);
+                            Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                            Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                            GameObject marker = (GameObject)Instantiate(_selectMarkerWT, MPos, MQua);
+                            marker.transform.Find("T").gameObject.GetComponent<TextMeshPro>().text = markerN.ToString();
+                        }
+                        
+                        markerN ++;
+                            
+                    }
+                    Debug.Log("here:" + singleinfo.Length);
+                }
+                guidebook = false;
+
+            }
         }
 
 
@@ -108,129 +177,91 @@ public class BasicHandPlayback : MonoBehaviour
         Transform _leftHandChild = _leftHand.transform.GetChild(0).GetChild(0);
         Transform _rightHandChild = _rightHand.transform.GetChild(0).GetChild(0);
 
-
-        // Cycle for each position value obtained (value at index 0 is timestamp - useful for syncing two hands/multiple recordings from the same session)
-        // for(int i = 1; i< 25; i++)
-        // {
-        //     Matrix4x4 HandMatrix = ConvertStringToMatrix(parts[i]);
-        //     _playbackObject.transform.GetChild(i-1).localPosition = new Vector3(HandMatrix[0,3], HandMatrix[1,3], HandMatrix[2,3]);
-        // }
-
         // right hand
-        Matrix4x4 HandMatrix1 = ConvertStringToMatrix(parts[1]);
-        _rightHandChild.localRotation = ExtractRotation(HandMatrix1);
-        _rightHandChild.localPosition = new Vector3(HandMatrix1[0,3], HandMatrix1[1,3], HandMatrix1[2,3]);
+
+        var handInfo = ConvertStringToInfo(parts[1]);
+        _rightHandChild.transform.position = RecordingMode.AnchorTransform.TransformPoint(handInfo.Item1);
+        _rightHandChild.transform.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
 
 
         Transform thumb = _rightHandChild.Find("b_r_thumb0");
-        Matrix4x4 preM = HandMatrix1;
+        // Matrix4x4 preM = HandMatrix1;
         for ( int i= 3; i < 7; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
-
         }
 
         thumb = _rightHandChild.Find("b_r_index1");
-        preM = HandMatrix1;
         for ( int i= 7; i < 10; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
 
         thumb = _rightHandChild.Find("b_r_middle1");
-        preM = HandMatrix1;
         for ( int i= 10; i < 13; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
 
         thumb = _rightHandChild.Find("b_r_ring1");
-        preM = HandMatrix1;
         for ( int i= 13; i < 16; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
 
         thumb = _rightHandChild.Find("b_r_pinky0");
-        preM = HandMatrix1;
         for ( int i= 16; i < 20; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
 
         // ----------------
         // left hand
-        Matrix4x4 HandMatrix25 = ConvertStringToMatrix(parts[25]);
-        _leftHandChild.localRotation = ExtractRotation(HandMatrix25);
-        _leftHandChild.localPosition = new Vector3(HandMatrix25[0,3], HandMatrix25[1,3], HandMatrix25[2,3]);
-
+        handInfo = ConvertStringToInfo(parts[25]);
+        _leftHandChild.transform.position = RecordingMode.AnchorTransform.TransformPoint(handInfo.Item1);
+        _leftHandChild.transform.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
 
         thumb = _leftHandChild.Find("b_l_thumb0");
-        preM = HandMatrix25;
+        // Matrix4x4 preM = HandMatrix1;
         for ( int i= 27; i < 31; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
-            thumb.localPosition = new Vector3(HandRela[0,3], HandRela[1,3], HandRela[2,3]);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
-
         }
 
         thumb = _leftHandChild.Find("b_l_index1");
-        preM = HandMatrix25;
         for ( int i= 31; i < 34; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
 
         thumb = _leftHandChild.Find("b_l_middle1");
-        preM = HandMatrix25;
         for ( int i= 34; i < 37; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
 
         thumb = _leftHandChild.Find("b_l_ring1");
-        preM = HandMatrix25;
         for ( int i= 37; i < 40; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
 
         thumb = _leftHandChild.Find("b_l_pinky0");
-        preM = HandMatrix25;
         for ( int i= 40; i < 44; i++){
-            Matrix4x4 HandMatrixNow = ConvertStringToMatrix(parts[i]);
-            Matrix4x4 HandRela = preM.inverse * HandMatrixNow;
-            thumb.localRotation = ExtractRotation(HandRela);
+            handInfo = ConvertStringToInfo(parts[i]);
+            thumb.rotation = RecordingMode.AnchorTransform.rotation * handInfo.Item2;
             thumb = thumb.GetChild(0);
-            preM = HandMatrixNow;
         }
+
         
         // head
         var headInfo = ConvertStringToInfo(parts[49]);

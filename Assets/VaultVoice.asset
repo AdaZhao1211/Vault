@@ -33,11 +33,51 @@ MonoBehaviour:
     isPrivate: 0
     createdAt: 2024-03-03T22:59:01-0800
     trainingStatus: 1
-    lastTrainDuration: 0
-    lastTrainedAt: 1969-12-31T16:00:00-0800
-    nextTrainAt: 1969-12-31T16:00:00-0800
-    intents: []
-    entities: []
+    lastTrainDuration: 47
+    lastTrainedAt: 2024-05-20T16:40:12-0700
+    nextTrainAt: 2024-05-20T16:39:25-0700
+    intents:
+    - id: 934225631413162
+      name: select
+      entities:
+      - name: object:object
+        id: 366334186232713
+    - id: 714597784175411
+      name: turn_action
+      entities:
+      - name: object:object
+        id: 366334186232713
+    - id: 286671427603876
+      name: wit$create_timer
+      entities:
+      - name: wit$duration:duration
+        id: 267291843082016
+    entities:
+    - name: object
+      id: 1622479371822890
+      lookups:
+      - free-text
+      - keywords
+      roles:
+      - name: object
+        id: 366334186232713
+      keywords:
+      - keyword: this
+        synonyms:
+        - this
+      - keyword: this button
+        synonyms:
+        - this button
+      - keyword: this knob
+        synonyms:
+        - this knob
+    - name: wit$duration
+      id: 535a80fb-4be9-4991-a48e-8b2ca4ef6e54
+      lookups: []
+      roles:
+      - name: duration
+        id: 267291843082016
+      keywords: []
     traits: []
     versionTags: []
     voices:

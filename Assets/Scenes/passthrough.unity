@@ -331,7 +331,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &278048324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -400,7 +400,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &315317918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -723,7 +723,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &613323393
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -905,7 +905,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &645894774
 Transform:
   m_ObjectHideFlags: 0
@@ -954,7 +954,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &662189001
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1060,7 +1060,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &835738832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1248,6 +1248,10 @@ PrefabInstance:
     - target: {fileID: 8407824115662186421, guid: bdd2171848f4542fb853ac93c3cb2f49, type: 3}
       propertyPath: m_Name
       value: RightHandWithTracking
+      objectReference: {fileID: 0}
+    - target: {fileID: 8407824115662186421, guid: bdd2171848f4542fb853ac93c3cb2f49, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8880058327416873557, guid: bdd2171848f4542fb853ac93c3cb2f49, type: 3}
       propertyPath: m_Enabled
@@ -1455,149 +1459,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1402794375
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1402794378}
-  - component: {fileID: 1402794377}
-  - component: {fileID: 1402794376}
-  m_Layer: 0
-  m_Name: AudioRecording
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1402794376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1402794375}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69e476f7fc7baaf46b09dc40dbfecd38, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  AudioSampleRate: 48000
-  AudioSource: {fileID: 0}
---- !u!82 &1402794377
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1402794375}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
---- !u!4 &1402794378
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1402794375}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 1.75, z: 3}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1411715660
 GameObject:
   m_ObjectHideFlags: 0
@@ -1684,6 +1545,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 23d33d9f596b74a7a87020ad99927e10, type: 3}
       propertyPath: m_Name
       value: ReplayHead
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 23d33d9f596b74a7a87020ad99927e10, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7198505596995067022, guid: 23d33d9f596b74a7a87020ad99927e10, type: 3}
       propertyPath: m_LocalScale.x
@@ -1936,7 +1801,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1694659156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2067,7 +1932,7 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Stopped
+            m_StringArgument: Processing...
             m_BoolArgument: 0
           m_CallState: 2
     _onMicLevelChanged:
@@ -2115,7 +1980,7 @@ MonoBehaviour:
     alwaysRecord: 0
     preferredActivationOffset: -0.5
   usePlatformServices: 0
-  enableConsoleLogging: 0
+  enableConsoleLogging: 1
   sendTranscriptionEventsForMessages: 0
 --- !u!4 &1694659158
 Transform:
@@ -2587,7 +2452,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1732268206786806, guid: d046b5d1345f14ff1a4d76b854672b95, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4927695388962516, guid: d046b5d1345f14ff1a4d76b854672b95, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2650,7 +2515,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2003371845
 Transform:
   m_ObjectHideFlags: 0
@@ -2709,7 +2574,6 @@ MonoBehaviour:
   Head: {fileID: 1291521872}
   Marker: {fileID: 2140709065}
   VoiceCommand: {fileID: 1694659155}
-  fname: 
 --- !u!1 &2076150011
 GameObject:
   m_ObjectHideFlags: 0
@@ -2726,7 +2590,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2076150012
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2778,6 +2642,10 @@ PrefabInstance:
     - target: {fileID: 1581749144712736, guid: 79aa95cba6749469fb02de4a85619f61, type: 3}
       propertyPath: m_Name
       value: CustomHandPrefab_R
+      objectReference: {fileID: 0}
+    - target: {fileID: 1581749144712736, guid: 79aa95cba6749469fb02de4a85619f61, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4766092344323370, guid: 79aa95cba6749469fb02de4a85619f61, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2909,6 +2777,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LeftHandWithTracking
       objectReference: {fileID: 0}
+    - target: {fileID: 8407824115662186421, guid: bdd2171848f4542fb853ac93c3cb2f49, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8880058327416873557, guid: bdd2171848f4542fb853ac93c3cb2f49, type: 3}
       propertyPath: _meshType
       value: 0
@@ -3033,7 +2905,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2140709066
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3111,4 +2983,3 @@ SceneRoots:
   - {fileID: 2112159714}
   - {fileID: 835738835}
   - {fileID: 278048326}
-  - {fileID: 1402794378}

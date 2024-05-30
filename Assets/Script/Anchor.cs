@@ -47,7 +47,7 @@ public class Anchor : MonoBehaviour
                 FlashSaveIcon();
                 }
             }else{
-                OnSaveLocalButtonPressed();
+                // OnSaveLocalButtonPressed();
                 // OnHideButtonPressed();
             }
         }

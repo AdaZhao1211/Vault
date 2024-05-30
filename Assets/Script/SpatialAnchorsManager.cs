@@ -67,6 +67,17 @@ public class SpatialAnchorsManager : MonoBehaviour
     private GameObject _recordAnchor;
     private GameObject _replayAnchor;
 
+    public String fname;
+
+    private bool recording;
+
+    [SerializeField]
+
+    private GameObject myAudioClip;
+    private float startRecordingTime = 0f;
+
+
+
 
 
 
@@ -89,15 +100,19 @@ public class SpatialAnchorsManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        string path = Application.persistentDataPath + "/test.txt";
+        fname = System.DateTime.Now.ToString("MMM-dd-HH-mm-ss");
+        string path = Path.Combine(Application.persistentDataPath, fname);
+        path += ".txt";
         //Write some text to the test.txt file
         writer = new StreamWriter(path, false);
+        recording = false;
 
     }
 
     // Update is called once per frame
     void Update()
     {
+
         // Debug.Log("mode = "+ Mode);
 
         if(Mode == 0){
@@ -117,28 +132,41 @@ public class SpatialAnchorsManager : MonoBehaviour
         }
 
         if (Mode == 1){
-            // recording
+            // Debug.Log("micro: " + Microphone.devices.Length);
+            // record audio for 2 mins
+            if(!recording){
+                recording = true;
+                // var temMessage = "";
+                // foreach (var device in Microphone.devices)
+                // {
+                //     temMessage += device;
+                //     temMessage += "\n";
+                // }
+                // Debug.Log("Name: " + temMessage);
+
+                myAudioClip = Microphone.Start(Microphone.devices[0], false, 120, 44100);
+                startRecordingTime = Time.time;
+            }
+
+            // record hands & head & markers
             timer += Time.deltaTime;
             if (timer >= _recordingInterval)
             {
                 timer = 0f;
                 writer.Write(System.DateTime.Now.ToString());
                 writer.Write("#");
-                // hands
+                // right hand
                 for (int i = 0; i < 24; i++){
-                    Matrix4x4 tempHand = RightHand.GetComponent<RecordSkeleton>().HandSkeletonM[i];
-                    for (int j = 0; j < 4; j++){
-                        writer.Write(tempHand.GetRow(j));
-                        if ( j != 3) writer.Write("$");
-                    }
+                    writer.Write(RightHand.GetComponent<RecordSkeleton>().HandSkeletonPos[i]);
+                    writer.Write("$");
+                    writer.Write(RightHand.GetComponent<RecordSkeleton>().HandSkeletonQua[i]);
                     writer.Write("#");
                 }
+                // left hand
                 for (int i = 0; i < 24; i++){
-                    Matrix4x4 tempHand = LeftHand.GetComponent<RecordSkeleton>().HandSkeletonM[i];
-                    for (int j = 0; j < 4; j++){
-                        writer.Write(tempHand.GetRow(j));
-                        if ( j != 3) writer.Write("$");
-                    }
+                    writer.Write(LeftHand.GetComponent<RecordSkeleton>().HandSkeletonPos[i]);
+                    writer.Write("$");
+                    writer.Write(LeftHand.GetComponent<RecordSkeleton>().HandSkeletonQua[i]);
                     writer.Write("#");
                 }
                 // head
@@ -160,6 +188,13 @@ public class SpatialAnchorsManager : MonoBehaviour
                     VoiceCommand.GetComponent<AppVoiceExperience>().Activate();
                 }
                 writer.Write("\n");
+
+                if (Marker.GetComponent<CreateMarker>().NeedtoActivate){
+                    VoiceCommand.GetComponent<AppVoiceExperience>().Activate();
+                    // Debug.Log("activate from anchor manager");
+                    Marker.GetComponent<CreateMarker>().NeedtoActivate = false;
+
+                }
             }
             
             // wait for end recording
@@ -176,6 +211,29 @@ public class SpatialAnchorsManager : MonoBehaviour
                 Mode = 2; // to replay
                 Destroy(_recordAnchor);
                 Marker.GetComponent<CreateMarker>().DestroyAllMarker();
+
+                Microphone.End(Microphone.devices[0]);
+                var temMessage = "";
+                foreach (var device in Microphone.devices)
+                {
+                    temMessage += device;
+                    temMessage += "\n";
+                }
+
+                Debug.Log("Namereplay: " + temMessage);
+
+
+                // save wav audio file
+                float recordingTime = Time.time - startRecordingTime;
+                AudioClip trimSilence = SavWav.TrimSilenceByTime(myAudioClip, recordingTime, 120f);
+                SavWav.Save(fname, trimSilence);
+
+
+                
+
+                // Debug.Log("Namereplay");
+
+
 
                 // print the recorded txt file
 
@@ -197,13 +255,17 @@ public class SpatialAnchorsManager : MonoBehaviour
                 AnchorMatrix = _anchorPlacementTransform.localToWorldMatrix;
                 PlaceReplayAnchor();
                 AnchorTransform = _replayAnchor.transform;
-                Debug.Log(AnchorTransform.position);
-                Debug.Log(AnchorMatrix.ToString());
 
                 // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
                 Mode = 3;
             } 
 
+        }
+
+        if(Mode == 3){
+            if (OVRInput.GetUp(OVRInput.Button.One)){
+                Mode = 4;
+            }
         }
         
 
