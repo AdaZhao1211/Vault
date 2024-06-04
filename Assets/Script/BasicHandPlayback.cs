@@ -39,6 +39,12 @@ public class BasicHandPlayback : MonoBehaviour
     private SpatialAnchorsManager RecordingMode;
 
     [SerializeField]
+    private AudioSource RecordAudio;
+
+
+
+    [SerializeField]
+    [Header("Markers")]
     private GameObject _selectMarker;
 
     [SerializeField]
@@ -61,6 +67,8 @@ public class BasicHandPlayback : MonoBehaviour
 
     private bool firstTime = true;
     private bool guidebook = true;
+    private bool replayPaused = true;
+
 
 
 
@@ -99,8 +107,18 @@ public class BasicHandPlayback : MonoBehaviour
                     }
                 }
                 
-
             }
+
+            if (replayPaused){
+                // play audio
+                ulong point = (ulong)((float)_currentIndex / (float)(lines.Length-1)*44100);
+                RecordAudio.Play(point);
+                Debug.Log("start at " + point);
+                RecordAudio.loop = true;
+                replayPaused = false;
+            }
+
+
             timer += Time.deltaTime;
 
             // Execute at sampling rate
@@ -119,7 +137,7 @@ public class BasicHandPlayback : MonoBehaviour
                 // Read line from file, and apply transforms to joints
                 ParseLineAndApplyTransform(lines[_currentIndex]);
                 _slider.GetComponent<Slider>().value = (float)_currentIndex / (float)(lines.Length-1);
-                Debug.Log(_currentIndex / (lines.Length-1));
+                // Debug.Log(_currentIndex / (lines.Length-1));
                 
                 // Set the index of the next line to read
                 _currentIndex++;
@@ -127,7 +145,16 @@ public class BasicHandPlayback : MonoBehaviour
 
 
         }
+
         if(RecordingMode.Mode == 4){
+            // pause
+            RecordAudio.Pause();
+            
+        }
+
+
+
+        if(RecordingMode.Mode == 5){
             Debug.Log("spatial guid mode");
             if (_readFile && guidebook){
                 int markerN = 1;
@@ -155,15 +182,12 @@ public class BasicHandPlayback : MonoBehaviour
                         markerN ++;
                             
                     }
-                    Debug.Log("here:" + singleinfo.Length);
+                    // Debug.Log("here:" + singleinfo.Length);
                 }
                 guidebook = false;
 
             }
         }
-
-
-        
     }
 
     /// <summary>

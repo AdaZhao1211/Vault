@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using System.IO;
 using Oculus.Voice;
@@ -69,12 +71,9 @@ public class SpatialAnchorsManager : MonoBehaviour
 
     public String fname;
 
-    private bool recording;
-
-    [SerializeField]
-
-    private GameObject myAudioClip;
-    private float startRecordingTime = 0f;
+    public string serverUrl = "http://192.168.0.230:8000";  // Change to your server's IP address and port
+    private AudioSource audioSource;
+    private bool getAudio;
 
 
 
@@ -100,30 +99,27 @@ public class SpatialAnchorsManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        fname = System.DateTime.Now.ToString("MMM-dd-HH-mm-ss");
+        fname = System.DateTime.Now.ToString("MM-dd-HH-mm-ss");
         string path = Path.Combine(Application.persistentDataPath, fname);
         path += ".txt";
         //Write some text to the test.txt file
         writer = new StreamWriter(path, false);
-        recording = false;
 
+        audioSource = GetComponent<AudioSource>();
+        getAudio = false;
     }
 
     // Update is called once per frame
     void Update()
     {
 
-        // Debug.Log("mode = "+ Mode);
-
         if(Mode == 0){
             // to record
             if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
-            // Debug.Log("button down");
                 PlaceAnchor();
                 AnchorTransform = _recordAnchor.transform;
-
-
                 // create a new empty file
+                // send osc signal to start audio recording
                 OscMessage _oscmessage = new OscMessage();
                 _oscmessage.address = "/startRecording";
                 osc.Send(_oscmessage);
@@ -132,22 +128,6 @@ public class SpatialAnchorsManager : MonoBehaviour
         }
 
         if (Mode == 1){
-            // Debug.Log("micro: " + Microphone.devices.Length);
-            // record audio for 2 mins
-            if(!recording){
-                recording = true;
-                // var temMessage = "";
-                // foreach (var device in Microphone.devices)
-                // {
-                //     temMessage += device;
-                //     temMessage += "\n";
-                // }
-                // Debug.Log("Name: " + temMessage);
-
-                myAudioClip = Microphone.Start(Microphone.devices[0], false, 120, 44100);
-                startRecordingTime = Time.time;
-            }
-
             // record hands & head & markers
             timer += Time.deltaTime;
             if (timer >= _recordingInterval)
@@ -197,42 +177,21 @@ public class SpatialAnchorsManager : MonoBehaviour
                 }
             }
             
-            // wait for end recording
+            //end recording
             if (OVRInput.GetUp(OVRInput.Button.One)){
                 Debug.Log("endRecording");
 
+                // osc to end recording
                 OscMessage _oscmessage;
                 _oscmessage = new OscMessage();
                 _oscmessage.address = "/endRecording";
+                _oscmessage.values.Add(fname);
                 osc.Send(_oscmessage);
-
 
                 writer.Close();
                 Mode = 2; // to replay
                 Destroy(_recordAnchor);
                 Marker.GetComponent<CreateMarker>().DestroyAllMarker();
-
-                Microphone.End(Microphone.devices[0]);
-                var temMessage = "";
-                foreach (var device in Microphone.devices)
-                {
-                    temMessage += device;
-                    temMessage += "\n";
-                }
-
-                Debug.Log("Namereplay: " + temMessage);
-
-
-                // save wav audio file
-                float recordingTime = Time.time - startRecordingTime;
-                AudioClip trimSilence = SavWav.TrimSilenceByTime(myAudioClip, recordingTime, 120f);
-                SavWav.Save(fname, trimSilence);
-
-
-                
-
-                // Debug.Log("Namereplay");
-
 
 
                 // print the recorded txt file
@@ -242,13 +201,22 @@ public class SpatialAnchorsManager : MonoBehaviour
                 // StreamReader reader = new StreamReader(path);
                 // Debug.Log(reader.ReadToEnd());
                 // reader.Close();
-
-                
+  
             }
         }
 
         if(Mode == 2){
-            if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
+
+            // get audio from local server
+            if(!getAudio){
+                string audioUrl = $"{serverUrl}/{fname}";
+                audioUrl += ".wav";
+                Debug.Log(audioUrl);
+                StartCoroutine(DownloadAndPlayAudio(audioUrl));
+                getAudio = true;
+            }
+
+            if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger) && getAudio){
                 // _replayAnchor.transform.position = _anchorPlacementTransform.position;
                 _replayLeftHand.transform.position = _anchorPlacementTransform.position;
                 _replayRightHand.transform.position = _anchorPlacementTransform.position;
@@ -256,17 +224,30 @@ public class SpatialAnchorsManager : MonoBehaviour
                 PlaceReplayAnchor();
                 AnchorTransform = _replayAnchor.transform;
 
+                
+
                 // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
                 Mode = 3;
             } 
 
         }
 
-        if(Mode == 3){
-            if (OVRInput.GetUp(OVRInput.Button.One)){
+        if (OVRInput.GetUp(OVRInput.Button.Two)){
+            if (Mode == 4){
+                Mode = 3;
+            }else if(Mode == 3){
                 Mode = 4;
             }
         }
+
+        if(Mode == 3){
+            if (OVRInput.GetUp(OVRInput.Button.One)){
+                Mode = 5;
+            }
+        }
+
+
+        
         
 
         
@@ -291,6 +272,26 @@ public class SpatialAnchorsManager : MonoBehaviour
 
         // check once!!!
         _replayAnchor = (GameObject)Instantiate(_demoAnchorPrefab, _anchorPlacementTransform.position, _anchorPlacementTransform.rotation);
+    }
+
+
+    public IEnumerator DownloadAndPlayAudio(string url)
+    {
+        using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(www.error);
+            }
+            else
+            {
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+                audioSource.clip = clip;
+                Debug.Log("playing audio file");
+            }
+        }
     }
 
 
