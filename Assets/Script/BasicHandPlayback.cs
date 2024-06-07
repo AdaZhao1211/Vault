@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEditor;
 using Unity.VisualScripting;
+using System;
 
 /// <summary>
 /// Basic method to read joint positions from a log file and apply them to the children of the game object on which this script is attached.
@@ -87,7 +88,7 @@ public class BasicHandPlayback : MonoBehaviour
                 string path = Path.Combine(Application.persistentDataPath, RecordingMode.fname);
                 path += ".txt";
 
-                //Read the text from directly from the test.txt file
+                //Read the text directly from the test.txt file
                 StreamReader reader = new StreamReader(path);
                 lines = reader.ReadToEnd().Split("\n");
                 reader.Close();
@@ -135,7 +136,7 @@ public class BasicHandPlayback : MonoBehaviour
                 }
 
                 // Read line from file, and apply transforms to joints
-                ParseLineAndApplyTransform(lines[_currentIndex]);
+                ParseLineAndApplyTransform(lines[_currentIndex], _currentIndex);
                 _slider.GetComponent<Slider>().value = (float)_currentIndex / (float)(lines.Length-1);
                 // Debug.Log(_currentIndex / (lines.Length-1));
                 
@@ -149,7 +150,7 @@ public class BasicHandPlayback : MonoBehaviour
         if(RecordingMode.Mode == 4){
             // pause
             RecordAudio.Pause();
-            
+            replayPaused = true;
         }
 
 
@@ -194,7 +195,7 @@ public class BasicHandPlayback : MonoBehaviour
     /// Reads one line from the file, parses it, and applies transforms to joints
     /// </summary>
     /// <param name="line"></param>
-    void ParseLineAndApplyTransform(string line)
+    void ParseLineAndApplyTransform(string line, int lineIndex)
     {
         // New line format: "092443800#(0.00, 0.00, 0.00)#(0.00, 0.00, 0.00)#..." - Timestamp + 21 position values
         string[] parts = line.Split('#');
@@ -300,13 +301,15 @@ public class BasicHandPlayback : MonoBehaviour
                 var MInfo = ConvertStringToInfo(parts[51]);
                 Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                 Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
-                Instantiate(_turnMarker, MPos, MQua);
+                GameObject marker = Instantiate(_turnMarker, MPos, MQua);
+                marker.GetComponent<MarkerNum>().MarkerLineNum = lineIndex;
             }
             if(parts[50] == "select"){
                 var MInfo = ConvertStringToInfo(parts[51]);
                 Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                 Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
-                Instantiate(_selectMarker, MPos, MQua);
+                GameObject marker = Instantiate(_selectMarker, MPos, MQua);
+                marker.GetComponent<MarkerNum>().MarkerLineNum = lineIndex;
             }
         }
 
@@ -403,5 +406,46 @@ public class BasicHandPlayback : MonoBehaviour
         float w = float.Parse(components[3]);
 
         return new Quaternion(x, y, z, w);
+    }
+
+    public void UpdateMarkerTrans(int index, Vector3 pos, Quaternion qua){
+
+        Vector3 newRelativePos = RecordingMode.AnchorTransform.InverseTransformPoint(pos);
+
+        Quaternion newRelativeQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * qua;
+
+        
+        // sample string to be replaced: #(-0.24, 0.02, -0.02)$(0.49859, 0.18957, -0.84346, 0.06357)\n
+
+        string path = Path.Combine(Application.persistentDataPath, RecordingMode.fname);
+        path += ".txt";
+        string[] Strings = File.ReadAllLines(path);
+        string theLine = Strings[index];
+        var message = theLine;
+        message += "\n";
+        // remove the old position
+        int sharpIndex = theLine.LastIndexOf("#");
+        theLine = theLine.Remove(sharpIndex);
+        message += theLine;
+        message += "\n";
+        // the new position
+        theLine += "#";
+        theLine += pos.ToString();
+        theLine += "$";
+        theLine += qua.ToString();
+        theLine += "\n";
+        Strings[index] = theLine;
+        message += theLine;
+        message += "\n";
+
+        Debug.Log(message);
+
+        // write all the lines back to the file
+
+        File.WriteAllLines(path, Strings);
+        
+
+        
+
     }
 }
