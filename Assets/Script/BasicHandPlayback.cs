@@ -42,7 +42,8 @@ public class BasicHandPlayback : MonoBehaviour
     [SerializeField]
     private AudioSource RecordAudio;
 
-
+    [SerializeField]
+    private bool onlyReplay;
 
     [SerializeField]
     [Header("Markers")]
@@ -50,6 +51,12 @@ public class BasicHandPlayback : MonoBehaviour
 
     [SerializeField]
     private GameObject _turnMarker;
+
+    [SerializeField]
+    private GameObject _selectMarkerGrab;
+
+    [SerializeField]
+    private GameObject _turnMarkerGrab;
 
     [SerializeField]
     private GameObject _selectMarkerWT;
@@ -297,20 +304,36 @@ public class BasicHandPlayback : MonoBehaviour
         if(parts.Length > 49 && firstTime){
             // there is marker
             // marker type # matrix 4x4
-            if(parts[50] == "turn"){
-                var MInfo = ConvertStringToInfo(parts[51]);
-                Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
-                Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
-                GameObject marker = Instantiate(_turnMarker, MPos, MQua);
-                marker.GetComponent<MarkerNum>().MarkerLineNum = lineIndex;
+            if (onlyReplay){
+                if(parts[50] == "turn"){
+                    var MInfo = ConvertStringToInfo(parts[51]);
+                    Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                    Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                    GameObject marker = Instantiate(_turnMarker, MPos, MQua);
+                }
+                if(parts[50] == "select"){
+                    var MInfo = ConvertStringToInfo(parts[51]);
+                    Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                    Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                    GameObject marker = Instantiate(_selectMarker, MPos, MQua);
+                }
+            }else{
+                if(parts[50] == "turn"){
+                    var MInfo = ConvertStringToInfo(parts[51]);
+                    Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                    Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                    GameObject marker = Instantiate(_turnMarkerGrab, MPos, MQua);
+                    marker.GetComponent<MarkerNum>().MarkerLineNum = lineIndex;
+                }
+                if(parts[50] == "select"){
+                    var MInfo = ConvertStringToInfo(parts[51]);
+                    Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
+                    Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
+                    GameObject marker = Instantiate(_selectMarkerGrab, MPos, MQua);
+                    marker.GetComponent<MarkerNum>().MarkerLineNum = lineIndex;
+                }
             }
-            if(parts[50] == "select"){
-                var MInfo = ConvertStringToInfo(parts[51]);
-                Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
-                Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
-                GameObject marker = Instantiate(_selectMarker, MPos, MQua);
-                marker.GetComponent<MarkerNum>().MarkerLineNum = lineIndex;
-            }
+            
         }
 
 
@@ -409,43 +432,57 @@ public class BasicHandPlayback : MonoBehaviour
     }
 
     public void UpdateMarkerTrans(int index, Vector3 pos, Quaternion qua){
-
+        // calculate new relative pos
         Vector3 newRelativePos = RecordingMode.AnchorTransform.InverseTransformPoint(pos);
-
         Quaternion newRelativeQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * qua;
 
         
-        // sample string to be replaced: #(-0.24, 0.02, -0.02)$(0.49859, 0.18957, -0.84346, 0.06357)\n
+        // sample string to be replaced: #(-0.24, 0.02, -0.02)$(0.49859, 0.18957, -0.84346, 0.06357)#\n
 
         string path = Path.Combine(Application.persistentDataPath, RecordingMode.fname);
         path += ".txt";
         string[] Strings = File.ReadAllLines(path);
         string theLine = Strings[index];
-        var message = theLine;
-        message += "\n";
+
         // remove the old position
         int sharpIndex = theLine.LastIndexOf("#");
         theLine = theLine.Remove(sharpIndex);
-        message += theLine;
-        message += "\n";
+        sharpIndex = theLine.LastIndexOf("#");
+        theLine = theLine.Remove(sharpIndex);
+
         // the new position
         theLine += "#";
-        theLine += pos.ToString();
+        theLine += newRelativePos.ToString();
         theLine += "$";
-        theLine += qua.ToString();
-        theLine += "\n";
+        theLine += newRelativeQua.ToString();
+        theLine += "#";
         Strings[index] = theLine;
-        message += theLine;
-        message += "\n";
-
-        Debug.Log(message);
 
         // write all the lines back to the file
-
         File.WriteAllLines(path, Strings);
         
-
-        
-
     }
+
+
+    public void DeleteMarker(int index){
+        // sample string to be deleted: #selectMarker#(-0.24, 0.02, -0.02)$(0.49859, 0.18957, -0.84346, 0.06357)#\n
+        string path = Path.Combine(Application.persistentDataPath, RecordingMode.fname);
+        path += ".txt";
+        string[] Strings = File.ReadAllLines(path);
+        string theLine = Strings[index];
+
+        // remove the information
+        int sharpIndex = theLine.LastIndexOf("#");
+        theLine = theLine.Remove(sharpIndex);
+        sharpIndex = theLine.LastIndexOf("#");
+        theLine = theLine.Remove(sharpIndex);
+        sharpIndex = theLine.LastIndexOf("#");
+        theLine = theLine.Remove(sharpIndex);
+        theLine += "#";
+
+        // write back
+        Strings[index] = theLine;
+        File.WriteAllLines(path, Strings);
+    }
+
 }

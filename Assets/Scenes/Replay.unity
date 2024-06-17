@@ -2730,7 +2730,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   osc: {fileID: 645894775}
-  Mode: 0
+  Mode: 2
   _anchorPlacementTransform: {fileID: 1242202111}
   _anchorPrefab: {fileID: 789684486510353890, guid: 0c6b2f4027af244d58215048b83bb06b, type: 3}
   _demoAnchorPrefab: {fileID: 789684486510353890, guid: de5d17344ce9640908d961e2b1c85d04, type: 3}
@@ -2760,7 +2760,8 @@ MonoBehaviour:
   Head: {fileID: 1291521872}
   Marker: {fileID: 2140709065}
   VoiceCommand: {fileID: 1694659155}
-  fname: 
+  onlyReplay: 1
+  fname: 06-11-16-43-04
   serverUrl: http://192.168.0.115:8000
 --- !u!82 &2003371847
 AudioSource:
@@ -2894,8 +2895,11 @@ MonoBehaviour:
   _currentIndex: 0
   RecordingMode: {fileID: 2003371846}
   RecordAudio: {fileID: 2003371847}
-  _selectMarker: {fileID: 332657940863038248, guid: 4aefa4d6c944200409139bdaecca1038, type: 3}
-  _turnMarker: {fileID: 4902530088269273823, guid: 8833c69c91441da43841e6b290a7d04b, type: 3}
+  onlyReplay: 1
+  _selectMarker: {fileID: 4773200846888988208, guid: 3d44ecdf2dd064300a82377826f88e2f, type: 3}
+  _turnMarker: {fileID: 4902530088269273823, guid: 0f02249b6b7864061b080d9107477d2c, type: 3}
+  _selectMarkerGrab: {fileID: 332657940863038248, guid: 4aefa4d6c944200409139bdaecca1038, type: 3}
+  _turnMarkerGrab: {fileID: 4902530088269273823, guid: 8833c69c91441da43841e6b290a7d04b, type: 3}
   _selectMarkerWT: {fileID: 4773200846888988208, guid: c2dab8efd92e9c04bb38a7e530f95afa, type: 3}
   _turnMarkerWT: {fileID: 4902530088269273823, guid: 39242faff1bf9004680ea3bc9e894b73, type: 3}
   _slider: {fileID: 2126888330}

@@ -66,6 +66,9 @@ public class SpatialAnchorsManager : MonoBehaviour
     [SerializeField]
     private GameObject VoiceCommand;
 
+    [SerializeField]
+    private bool onlyReplay;
+
     private GameObject _recordAnchor;
     private GameObject _replayAnchor;
 
@@ -99,11 +102,16 @@ public class SpatialAnchorsManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        fname = System.DateTime.Now.ToString("MM-dd-HH-mm-ss");
-        string path = Path.Combine(Application.persistentDataPath, fname);
-        path += ".txt";
-        //Write some text to the test.txt file
-        writer = new StreamWriter(path, false);
+
+        if (!onlyReplay){
+             fname = System.DateTime.Now.ToString("MM-dd-HH-mm-ss");
+            string path = Path.Combine(Application.persistentDataPath, fname);
+            path += ".txt";
+            //Write some text to the test.txt file
+            writer = new StreamWriter(path, false);   
+        }
+
+        
 
         audioSource = GetComponent<AudioSource>();
         getAudio = false;
@@ -153,17 +161,18 @@ public class SpatialAnchorsManager : MonoBehaviour
                 writer.Write(Head.GetComponent<HeadTracking>().HeadPos);
                 writer.Write("$");
                 writer.Write(Head.GetComponent<HeadTracking>().HeadQua);
+                writer.Write("#");
+
 
                 // marker
                 if( Marker.GetComponent<CreateMarker>().NeedtoRecord){
-                    writer.Write("#");
-
                     // if there is marker need to be recorded
                     writer.Write(Marker.GetComponent<CreateMarker>().MarkerType);
                     writer.Write("#");
                     writer.Write(Marker.GetComponent<CreateMarker>().MarkerPos);
                     writer.Write("$");
                     writer.Write(Marker.GetComponent<CreateMarker>().MarkerQua);
+                    writer.Write("#");
                     Marker.GetComponent<CreateMarker>().NeedtoRecord = false;
                     VoiceCommand.GetComponent<AppVoiceExperience>().Activate();
                 }

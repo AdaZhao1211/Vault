@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/OculusSetup.unity
+    path: Assets/Scenes/Record.unity
     guid: 8c90eed91fd5f42bdb473c85865ba118
   - enabled: 0
     path: Assets/Scenes/passthrough.unity
