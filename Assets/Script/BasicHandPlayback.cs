@@ -107,7 +107,7 @@ public class BasicHandPlayback : MonoBehaviour
                 for (int i = 0; i < lines.Length-1; i++){
                     var singleline = lines[i];
                     var singleinfo = singleline.Split('#');
-                    if (singleinfo.Length > 49){
+                    if (singleinfo.Length > 51){
                         
                             GameObject turnText = Instantiate(_KeyEventText,_canvas);
                             turnText.GetComponent<RectTransform>().localPosition = new Vector3(i/(float)(lines.Length-1)*3-1.5f,-0.05f,0);
@@ -465,6 +465,7 @@ public class BasicHandPlayback : MonoBehaviour
 
 
     public void DeleteMarker(int index){
+        Debug.Log("deleting");
         // sample string to be deleted: #selectMarker#(-0.24, 0.02, -0.02)$(0.49859, 0.18957, -0.84346, 0.06357)#\n
         string path = Path.Combine(Application.persistentDataPath, RecordingMode.fname);
         path += ".txt";
@@ -483,6 +484,12 @@ public class BasicHandPlayback : MonoBehaviour
         // write back
         Strings[index] = theLine;
         File.WriteAllLines(path, Strings);
+
+        // // remove text on timeline
+        // int timelineChildren = _slider.transform.parent.childCount;
+        // for (int i = 1; i < timelineChildren; i++){
+        //     Destroy(_slider.transform.parent.GetChild(0).gameObject);
+        // }
     }
 
 }

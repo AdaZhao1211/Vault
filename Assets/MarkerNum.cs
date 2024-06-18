@@ -25,7 +25,9 @@ public class MarkerNum : MonoBehaviour
     }
 
     public void DeleteMarker(){
+        Debug.Log("delete");
         playback.DeleteMarker(MarkerLineNum);
+        Destroy(gameObject);
 
     }
 }
