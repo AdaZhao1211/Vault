@@ -41,9 +41,7 @@ public class SpatialAnchorsManager : MonoBehaviour
     [SerializeField]
     private GameObject _replayRightHand;
 
-    public Vector3 AnchorPosition;
     public Transform AnchorTransform;
-    public Matrix4x4 AnchorMatrix;
 
     private float _recordingInterval = 0.03f;
 
@@ -52,6 +50,8 @@ public class SpatialAnchorsManager : MonoBehaviour
     private float timer = 0f;
 
    [SerializeField]
+    [Header("Record")]
+
     private GameObject RightHand;
 
     [SerializeField]
@@ -59,6 +59,8 @@ public class SpatialAnchorsManager : MonoBehaviour
 
     [SerializeField]
     private GameObject Head;
+    [SerializeField]
+    private GameObject ExObject;
 
     [SerializeField]
     private GameObject Marker;
@@ -121,9 +123,11 @@ public class SpatialAnchorsManager : MonoBehaviour
     void Update()
     {
 
-        if(Mode == 0){
-            // to record
-            if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
+
+        if(OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger)){
+            if(Mode == 0)
+            {
+                // start recording
                 PlaceAnchor();
                 AnchorTransform = _recordAnchor.transform;
                 // create a new empty file
@@ -132,6 +136,52 @@ public class SpatialAnchorsManager : MonoBehaviour
                 _oscmessage.address = "/startRecording";
                 osc.Send(_oscmessage);
                 Mode = 1; // recording
+            }
+            else if (Mode == 1)
+            {
+                // end recording
+                Debug.Log("endRecording");
+
+                // osc to end recording
+                OscMessage _oscmessage;
+                _oscmessage = new OscMessage();
+                _oscmessage.address = "/endRecording";
+                _oscmessage.values.Add(fname);
+                osc.Send(_oscmessage);
+
+                writer.Close();
+                Mode = 2; // to replay
+                Destroy(_recordAnchor);
+                Marker.GetComponent<CreateMarker>().DestroyAllMarker();
+
+                // disable recording objects
+                RightHand.SetActive(false);
+                LeftHand.SetActive(false);
+                ExObject.SetActive(false);
+
+
+                // print the recorded txt file
+
+                // string path = Application.persistentDataPath + "/test.txt";
+                // //Read the text from directly from the test.txt file
+                // StreamReader reader = new StreamReader(path);
+                // Debug.Log(reader.ReadToEnd());
+                // reader.Close();
+
+            }else if (Mode == 2)
+            {
+                if (getAudio){
+                    // _replayAnchor.transform.position = _anchorPlacementTransform.position;
+                    _replayLeftHand.transform.position = _anchorPlacementTransform.position;
+                    _replayRightHand.transform.position = _anchorPlacementTransform.position;
+                    PlaceReplayAnchor();
+                    AnchorTransform = _replayAnchor.transform;
+
+                    
+
+                    // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
+                    Mode = 3;
+                }
             }
         }
 
@@ -162,7 +212,11 @@ public class SpatialAnchorsManager : MonoBehaviour
                 writer.Write("$");
                 writer.Write(Head.GetComponent<HeadTracking>().HeadQua);
                 writer.Write("#");
-
+                // external object
+                writer.Write(AnchorTransform.InverseTransformPoint(ExObject.transform.position));
+                writer.Write("$");
+                writer.Write(Quaternion.Inverse(AnchorTransform.rotation) * ExObject.transform.rotation);
+                writer.Write("#");
 
                 // marker
                 if( Marker.GetComponent<CreateMarker>().NeedtoRecord){
@@ -184,34 +238,7 @@ public class SpatialAnchorsManager : MonoBehaviour
                     Marker.GetComponent<CreateMarker>().NeedtoActivate = false;
 
                 }
-            }
-            
-            //end recording
-            if (OVRInput.GetUp(OVRInput.Button.One)){
-                Debug.Log("endRecording");
-
-                // osc to end recording
-                OscMessage _oscmessage;
-                _oscmessage = new OscMessage();
-                _oscmessage.address = "/endRecording";
-                _oscmessage.values.Add(fname);
-                osc.Send(_oscmessage);
-
-                writer.Close();
-                Mode = 2; // to replay
-                Destroy(_recordAnchor);
-                Marker.GetComponent<CreateMarker>().DestroyAllMarker();
-
-
-                // print the recorded txt file
-
-                // string path = Application.persistentDataPath + "/test.txt";
-                // //Read the text from directly from the test.txt file
-                // StreamReader reader = new StreamReader(path);
-                // Debug.Log(reader.ReadToEnd());
-                // reader.Close();
-  
-            }
+            }            
         }
 
         if(Mode == 2){
@@ -225,19 +252,7 @@ public class SpatialAnchorsManager : MonoBehaviour
                 getAudio = true;
             }
 
-            if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger) && getAudio){
-                // _replayAnchor.transform.position = _anchorPlacementTransform.position;
-                _replayLeftHand.transform.position = _anchorPlacementTransform.position;
-                _replayRightHand.transform.position = _anchorPlacementTransform.position;
-                AnchorMatrix = _anchorPlacementTransform.localToWorldMatrix;
-                PlaceReplayAnchor();
-                AnchorTransform = _replayAnchor.transform;
-
-                
-
-                // _replayAnchor.transform.rotation = _anchorPlacementTransform.rotation;
-                Mode = 3;
-            } 
+            
 
         }
 
@@ -269,8 +284,7 @@ public class SpatialAnchorsManager : MonoBehaviour
 
     private void PlaceAnchor()
     {
-        AnchorMatrix = _anchorPlacementTransform.localToWorldMatrix;
-        AnchorPosition = new Vector3(AnchorMatrix[0,3], AnchorMatrix[1,3], AnchorMatrix[2,3]);
+        
 
         // check once!!!
         _recordAnchor = (GameObject)Instantiate(_anchorPrefab, _anchorPlacementTransform.position, _anchorPlacementTransform.rotation);

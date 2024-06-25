@@ -20,12 +20,6 @@ public class RecordSkeleton : MonoBehaviour
     private SpatialAnchorsManager RecordingMode;
 
 
-    private GameObject _anchor;
-    private bool _findAnchor = false;
-
-    private Transform constructedAnchorTransform;
-
-
     public Vector3 IndexTipPos;
 
     public Vector3[] HandSkeletonPos;
@@ -58,17 +52,7 @@ public class RecordSkeleton : MonoBehaviour
         // is recording
         if(RecordingMode.Mode == 1){
             // first save the anchor
-            if (!_findAnchor){
-                var theAcnhorMatrix = RecordingMode.AnchorMatrix;
-                Vector3 anchorP = new Vector3(theAcnhorMatrix[0,3], theAcnhorMatrix[1,3], theAcnhorMatrix[2,3]);
-                Quaternion anchorR = ExtractRotation(theAcnhorMatrix);
-                constructedAnchorTransform = new GameObject().transform;
-                // Transform constructedAnchorTransform;
-                constructedAnchorTransform.position = anchorP;
-                constructedAnchorTransform.rotation = anchorR;
-                constructedAnchorTransform.localScale = new Vector3(1, 1, 1);
-                _findAnchor = true;
-            }
+            
             if(hand.IsTracked)
             {
                 DisplayBoneInfo();
@@ -118,7 +102,6 @@ public class RecordSkeleton : MonoBehaviour
             Quaternion relativeQua = Quaternion.Inverse(RecordingMode.AnchorTransform.rotation) * bone.Transform.rotation;
             HandSkeletonPos[i] = relativePosition;
             HandSkeletonQua[i] = relativeQua;
-            HandSkeletonM[i] = RecordingMode.AnchorMatrix.inverse * bone.Transform.localToWorldMatrix;
 
             // Vector3 relativePosition = bone.Transform.position;
             // log bone position to file
@@ -131,12 +114,12 @@ public class RecordSkeleton : MonoBehaviour
             i ++;
             
         }
-        message += i.ToString();
-        message += "\n";
-        message += IndexTipPos.ToString();
-        message += "\n";
-        message += constructedAnchorTransform.position.ToString();
-        osc.Send(_oscmessage);
+        // message += i.ToString();
+        // message += "\n";
+        // message += IndexTipPos.ToString();
+        // message += "\n";
+        // message += constructedAnchorTransform.position.ToString();
+        // osc.Send(_oscmessage);
         // Debug.Log(message);
     }
 

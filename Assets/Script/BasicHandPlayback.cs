@@ -21,6 +21,8 @@ public class BasicHandPlayback : MonoBehaviour
 
     [SerializeField]
     public GameObject _rightHand;
+    [SerializeField]
+    public GameObject _externalObject;
 
     [SerializeField]
     [Header("Sampling rate")]
@@ -82,6 +84,10 @@ public class BasicHandPlayback : MonoBehaviour
 
     void Start()
     {
+        _headplayback.SetActive(false);
+        _leftHand.SetActive(false);
+        _rightHand.SetActive(false);
+        _externalObject.SetActive(false);
 
         
     }
@@ -91,6 +97,10 @@ public class BasicHandPlayback : MonoBehaviour
         if(RecordingMode.Mode == 3){
             //replaying
             if(!_readFile){
+                _headplayback.SetActive(true);
+                _leftHand.SetActive(true);
+                _rightHand.SetActive(true);
+                _externalObject.SetActive(true);
                 // need to read file
                 string path = Path.Combine(Application.persistentDataPath, RecordingMode.fname);
                 path += ".txt";
@@ -111,7 +121,7 @@ public class BasicHandPlayback : MonoBehaviour
                         
                             GameObject turnText = Instantiate(_KeyEventText,_canvas);
                             turnText.GetComponent<RectTransform>().localPosition = new Vector3(i/(float)(lines.Length-1)*3-1.5f,-0.05f,0);
-                            turnText.GetComponent<TextMeshProUGUI>().text = singleinfo[50];
+                            turnText.GetComponent<TextMeshProUGUI>().text = singleinfo[51];
                     }
                 }
                 
@@ -171,16 +181,16 @@ public class BasicHandPlayback : MonoBehaviour
                     var singleinfo = singleline.Split('#');
                     
                     if (singleinfo.Length > 51){
-                        if(singleinfo[50] == "turn"){
-                            var MInfo = ConvertStringToInfo(singleinfo[51]);
+                        if(singleinfo[51] == "turn"){
+                            var MInfo = ConvertStringToInfo(singleinfo[52]);
                             Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                             Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
                             GameObject marker = (GameObject)Instantiate(_turnMarkerWT, MPos, MQua);
                             marker.transform.Find("T").gameObject.GetComponent<TextMeshPro>().text = markerN.ToString();
 
                         }
-                        if(singleinfo[50] == "select"){
-                            var MInfo = ConvertStringToInfo(singleinfo[51]);
+                        if(singleinfo[51] == "select"){
+                            var MInfo = ConvertStringToInfo(singleinfo[52]);
                             Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                             Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
                             GameObject marker = (GameObject)Instantiate(_selectMarkerWT, MPos, MQua);
@@ -300,33 +310,38 @@ public class BasicHandPlayback : MonoBehaviour
         _headplayback.transform.position = RecordingMode.AnchorTransform.TransformPoint(headInfo.Item1);
         _headplayback.transform.rotation = RecordingMode.AnchorTransform.rotation * headInfo.Item2;
 
+        // object
+        var objInfo = ConvertStringToInfo(parts[50]);
+        _externalObject.transform.position = RecordingMode.AnchorTransform.TransformPoint(objInfo.Item1);
+        _externalObject.transform.rotation = RecordingMode.AnchorTransform.rotation * objInfo.Item2;
+
         // marker?
-        if(parts.Length > 49 && firstTime){
+        if(parts.Length > 51 && firstTime){
             // there is marker
             // marker type # matrix 4x4
             if (onlyReplay){
-                if(parts[50] == "turn"){
-                    var MInfo = ConvertStringToInfo(parts[51]);
+                if(parts[51] == "turn"){
+                    var MInfo = ConvertStringToInfo(parts[52]);
                     Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                     Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
                     GameObject marker = Instantiate(_turnMarker, MPos, MQua);
                 }
-                if(parts[50] == "select"){
-                    var MInfo = ConvertStringToInfo(parts[51]);
+                if(parts[51] == "select"){
+                    var MInfo = ConvertStringToInfo(parts[52]);
                     Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                     Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
                     GameObject marker = Instantiate(_selectMarker, MPos, MQua);
                 }
             }else{
-                if(parts[50] == "turn"){
-                    var MInfo = ConvertStringToInfo(parts[51]);
+                if(parts[51] == "turn"){
+                    var MInfo = ConvertStringToInfo(parts[52]);
                     Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                     Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
                     GameObject marker = Instantiate(_turnMarkerGrab, MPos, MQua);
                     marker.GetComponent<MarkerNum>().MarkerLineNum = lineIndex;
                 }
-                if(parts[50] == "select"){
-                    var MInfo = ConvertStringToInfo(parts[51]);
+                if(parts[51] == "select"){
+                    var MInfo = ConvertStringToInfo(parts[52]);
                     Vector3 MPos = RecordingMode.AnchorTransform.TransformPoint(MInfo.Item1);
                     Quaternion MQua = RecordingMode.AnchorTransform.rotation * MInfo.Item2;
                     GameObject marker = Instantiate(_selectMarkerGrab, MPos, MQua);

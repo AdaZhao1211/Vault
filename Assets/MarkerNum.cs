@@ -6,6 +6,7 @@ public class MarkerNum : MonoBehaviour
 {
 
     public int MarkerLineNum;
+    public bool menu;
     [SerializeField]
     private BasicHandPlayback playback;
     // Start is called before the first frame update
@@ -29,5 +30,23 @@ public class MarkerNum : MonoBehaviour
         playback.DeleteMarker(MarkerLineNum);
         Destroy(gameObject);
 
+    }
+
+    public void menuSelect(){
+        if (menu){
+            // create a copy leave it there
+
+            
+
+        }
+    }
+
+    public void menuUnselect(){
+        if (menu){
+            // create a copy leave it there
+
+            
+
+        }
     }
 }
